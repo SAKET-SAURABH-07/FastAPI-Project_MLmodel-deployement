@@ -1,9 +1,11 @@
 @echo off
-echo ===================================================
-echo  Starting FastAPI Learning Showcase Server
-echo ===================================================
+echo =================================================================
+echo  Starting California Housing ML & FastAPI Server
+echo =================================================================
 cd /d "%~dp0"
-if exist "fastapi-project\venv\Scripts\python.exe" (
+if exist "venv\Scripts\python.exe" (
+    "venv\Scripts\python.exe" app.py
+) else if exist "fastapi-project\venv\Scripts\python.exe" (
     "fastapi-project\venv\Scripts\python.exe" app.py
 ) else (
     python app.py

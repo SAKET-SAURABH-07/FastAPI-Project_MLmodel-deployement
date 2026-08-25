@@ -3,224 +3,498 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FastAPI Studio</title>
+  <title>FastAPI ML Studio | California Housing Price Predictor</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* Layout helpers — scoped here to avoid CSS file bloat */
-    .container { max-width: 760px; margin: 0 auto; padding: 0 18px; }
-    .container-wide { max-width: 960px; margin: 0 auto; padding: 0 18px; }
-    .main { padding: 32px 0 56px; }
-    .page-head { margin-bottom: 22px; }
-
-    /* Two-column grid used on home & concepts */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    /* Stacked sections with gap */
-    .stack > * + * { margin-top: 14px; }
-    .stack-lg > * + * { margin-top: 22px; }
-
-    /* Nav scrollable on mobile */
-    .nav-scroll { overflow-x: auto; display: flex; gap: 2px; padding-bottom: 1px; }
-    .nav-scroll::-webkit-scrollbar { display: none; }
-
-    /* Student dual-card layout */
-    .students-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
-    @media (max-width: 640px) { .students-grid { grid-template-columns: 1fr; } }
-
-    /* Loan layout — form left, result right on wide, stacked on small */
-    .loan-layout { display: grid; grid-template-columns: 1fr 300px; gap: 14px; align-items: start; }
-    @media (max-width: 680px) { .loan-layout { grid-template-columns: 1fr; } }
-
-    /* Inline chips row */
-    .chips-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
-    .chips-label { font-size: 0.75rem; color: var(--text-3); }
-
-    /* Stat row inside result cards */
-    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-    @media (max-width: 400px) { .stat-row { grid-template-columns: 1fr; } }
-    .stat-item { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; }
-    .stat-item .stat-label { font-size: 0.72rem; color: var(--text-3); margin-bottom: 2px; }
-    .stat-item .stat-value { font-size: 0.92rem; font-weight: 700; color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
-
-    /* Concepts badges row */
-    .status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-
-    /* Dev console */
-    .dev-console { border-top: 1px solid var(--border); }
-    .dev-console-inner { max-width: 760px; margin: 0 auto; padding: 14px 18px 18px; }
-
-    /* Customer results grid */
-    .customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin-top: 12px; }
-
-    /* Empty placeholder */
-    .empty-state { text-align: center; padding: 28px 20px; color: var(--text-3); font-size: 0.85rem; }
-    .empty-state i { font-size: 1.6rem; display: block; margin-bottom: 8px; }
-  </style>
 </head>
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- NAVIGATION                                                            -->
+<!-- NAVIGATION BAR                                                        -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<header style="border-bottom:1px solid var(--border); background:rgba(9,16,31,.92); backdrop-filter:blur(14px); position:sticky; top:0; z-index:40;">
-  <div class="container-wide" style="display:flex; align-items:center; justify-content:space-between; height:56px; gap:12px;">
+<header class="navbar">
+  <div class="container-wide nav-inner">
 
     <!-- Brand -->
-    <button onclick="goTo('home')" style="display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;flex-shrink:0;">
-      <span style="width:28px;height:28px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;">
-        <i class="fas fa-bolt" style="font-size:.8rem;color:#09101f;"></i>
+    <button onclick="goTo('home')" class="brand-btn">
+      <span class="brand-icon">
+        <i class="fas fa-brain"></i>
       </span>
-      <span style="font-weight:700;font-size:.95rem;color:var(--text-1);">FastAPI Studio</span>
+      <div class="brand-text">
+        <span class="brand-title">FastAPI ML Studio</span>
+        <span class="brand-subtitle">California Housing AI</span>
+      </div>
     </button>
 
-    <!-- Nav links (desktop) -->
-    <nav class="nav-scroll" style="flex:1; justify-content:center; display:flex;" id="main-nav">
-      <button class="nav-link active" onclick="goTo('home')"      id="nl-home">Home</button>
-      <button class="nav-link"        onclick="goTo('students')"  id="nl-students">Students</button>
-      <button class="nav-link"        onclick="goTo('loans')"     id="nl-loans">Loans</button>
-      <button class="nav-link"        onclick="goTo('customers')" id="nl-customers">Customers</button>
-      <button class="nav-link"        onclick="goTo('risk')"      id="nl-risk">Risk Profiles</button>
-      <button class="nav-link"        onclick="goTo('concepts')"  id="nl-concepts">Concepts</button>
+    <!-- Navigation Links -->
+    <nav class="nav-links" id="main-nav">
+      <button class="nav-link active" onclick="goTo('home')"        id="nl-home"><i class="fas fa-house-chimney"></i> Home</button>
+      <button class="nav-link"        onclick="goTo('ml-predict')"  id="nl-ml-predict"><i class="fas fa-calculator"></i> ML Predictor</button>
+      <button class="nav-link"        onclick="goTo('batch-upload')" id="nl-batch-upload"><i class="fas fa-file-csv"></i> Batch CSV</button>
+      <button class="nav-link"        onclick="goTo('students')"    id="nl-students"><i class="fas fa-graduation-cap"></i> Students</button>
+      <button class="nav-link"        onclick="goTo('loans')"       id="nl-loans"><i class="fas fa-hand-holding-dollar"></i> Loans</button>
+      <button class="nav-link"        onclick="goTo('customers')"   id="nl-customers"><i class="fas fa-users"></i> Customers</button>
+      <button class="nav-link"        onclick="goTo('model-info')"  id="nl-model-info"><i class="fas fa-circle-info"></i> Model Specs</button>
     </nav>
 
-    <!-- Right: status + doc links -->
-    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text-3);">
-        <span id="status-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text-3);flex-shrink:0;"></span>
-        <span id="status-label" class="hide-mobile">Checking…</span>
+    <!-- Status & Documentation Links -->
+    <div class="nav-right">
+      <div class="health-indicator" onclick="testConnection()" title="Click to test backend connection">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-label">Checking...</span>
       </div>
-      <div style="width:1px;height:16px;background:var(--border);"></div>
-      <a href="/docs"   target="_blank" style="font-size:.78rem;color:var(--text-3);white-space:nowrap;" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-3)'">Swagger <i class="fas fa-arrow-up-right-from-square" style="font-size:.6rem;"></i></a>
-      <a href="/redoc"  target="_blank" style="font-size:.78rem;color:var(--text-3);white-space:nowrap;display:none;" id="redoc-link" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-3)'">ReDoc <i class="fas fa-arrow-up-right-from-square" style="font-size:.6rem;"></i></a>
+      <div class="nav-divider"></div>
+      <a href="/docs" target="_blank" class="doc-link" title="Open Swagger UI API Documentation">
+        <i class="fas fa-book-open"></i> <span class="hide-mobile">Swagger</span>
+      </a>
+      <a href="/redoc" target="_blank" class="doc-link" title="Open ReDoc API Documentation">
+        <i class="fas fa-file-lines"></i> <span class="hide-mobile">ReDoc</span>
+      </a>
     </div>
   </div>
 
-  <!-- Mobile nav scroll row -->
-  <div style="border-top:1px solid rgba(255,255,255,.04);">
-    <div style="overflow-x:auto;display:flex;gap:2px;padding:6px 18px;" id="mobile-nav">
-      <button class="nav-link active" onclick="goTo('home')"      id="mnl-home"      style="font-size:.8rem;">Home</button>
-      <button class="nav-link"        onclick="goTo('students')"  id="mnl-students"  style="font-size:.8rem;">Students</button>
-      <button class="nav-link"        onclick="goTo('loans')"     id="mnl-loans"     style="font-size:.8rem;">Loans</button>
-      <button class="nav-link"        onclick="goTo('customers')" id="mnl-customers" style="font-size:.8rem;">Customers</button>
-      <button class="nav-link"        onclick="goTo('risk')"      id="mnl-risk"      style="font-size:.8rem;">Risk Profiles</button>
-      <button class="nav-link"        onclick="goTo('concepts')"  id="mnl-concepts"  style="font-size:.8rem;">Concepts</button>
+  <!-- Mobile Navigation Scroll Row -->
+  <div class="mobile-nav-bar">
+    <div class="mobile-nav-scroll" id="mobile-nav">
+      <button class="nav-link active" onclick="goTo('home')"        id="mnl-home"><i class="fas fa-house-chimney"></i> Home</button>
+      <button class="nav-link"        onclick="goTo('ml-predict')"  id="mnl-ml-predict"><i class="fas fa-calculator"></i> Predictor</button>
+      <button class="nav-link"        onclick="goTo('batch-upload')" id="mnl-batch-upload"><i class="fas fa-file-csv"></i> Batch</button>
+      <button class="nav-link"        onclick="goTo('students')"    id="mnl-students"><i class="fas fa-graduation-cap"></i> Students</button>
+      <button class="nav-link"        onclick="goTo('loans')"       id="mnl-loans"><i class="fas fa-hand-holding-dollar"></i> Loans</button>
+      <button class="nav-link"        onclick="goTo('customers')"   id="mnl-customers"><i class="fas fa-users"></i> Customers</button>
+      <button class="nav-link"        onclick="goTo('model-info')"  id="mnl-model-info"><i class="fas fa-circle-info"></i> Specs</button>
     </div>
   </div>
 </header>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- MAIN CONTENT                                                          -->
+<!-- MAIN APPLICATION VIEWS                                                -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<main class="main">
+<main class="main-content">
 
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <!-- PAGE: HOME                                                          -->
+  <!-- 1. HOME DASHBOARD OVERVIEW                                          -->
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <div class="page active" id="page-home">
+  <section class="page active" id="page-home">
+    <div class="container">
+
+      <!-- Hero Header -->
+      <div class="hero-banner">
+        <div class="hero-tag">
+          <span class="pulse-ring"></span>
+          <span>FastAPI 2.0 + Scikit-Learn Random Forest</span>
+        </div>
+        <h1 class="hero-title">California Housing Price AI & Full-Stack API Studio</h1>
+        <p class="hero-desc">
+          Production-grade machine learning model deployment serving real-time housing valuations, batch CSV inferences, and REST architectural patterns.
+        </p>
+
+        <div class="hero-stats">
+          <div class="stat-pill">
+            <i class="fas fa-microchip"></i>
+            <div>
+              <span class="stat-pill-val">Random Forest</span>
+              <span class="stat-pill-lbl">100 Trees Regressor</span>
+            </div>
+          </div>
+          <div class="stat-pill">
+            <i class="fas fa-bullseye"></i>
+            <div>
+              <span class="stat-pill-val">± $39,000</span>
+              <span class="stat-pill-lbl">Mean Average Error</span>
+            </div>
+          </div>
+          <div class="stat-pill">
+            <i class="fas fa-database"></i>
+            <div>
+              <span class="stat-pill-val">20,640</span>
+              <span class="stat-pill-lbl">California Census Records</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module Feature Cards -->
+      <div class="grid-2" style="margin-top: 24px;">
+
+        <!-- ML House Predictor -->
+        <div class="home-card card-glow">
+          <div class="home-card-header">
+            <div class="home-card-icon"><i class="fas fa-calculator"></i></div>
+            <span class="badge badge-blue">ML Model</span>
+          </div>
+          <div>
+            <h3>House Price Predictor</h3>
+            <p>Input 8 demographic & geographic features to predict California property valuation with confidence intervals.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('ml-predict')">
+            Launch Predictor <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Batch CSV Prediction -->
+        <div class="home-card">
+          <div class="home-card-header">
+            <div class="home-card-icon"><i class="fas fa-file-csv"></i></div>
+            <span class="badge badge-green">Batch Streaming</span>
+          </div>
+          <div>
+            <h3>Batch CSV Inference</h3>
+            <p>Upload multi-row dataset files. The model processes rows and streams back an annotated CSV with predicted prices.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('batch-upload')">
+            Upload CSV <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Student Marks API -->
+        <div class="home-card">
+          <div class="home-card-header">
+            <div class="home-card-icon"><i class="fas fa-graduation-cap"></i></div>
+            <span class="badge badge-neutral">REST Patterns</span>
+          </div>
+          <div>
+            <h3>Student Marks Management</h3>
+            <p>Demonstrates path parameter fetching (<code>GET /students/{id}</code>) and Pydantic validation (<code>POST /submit-marks</code>).</p>
+          </div>
+          <button class="btn btn-secondary" onclick="goTo('students')">
+            Explore Students <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Loan Eligibility Engine -->
+        <div class="home-card">
+          <div class="home-card-header">
+            <div class="home-card-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+            <span class="badge badge-neutral">Pydantic Engine</span>
+          </div>
+          <div>
+            <h3>Loan Eligibility Predictor</h3>
+            <p>Multi-variable financial criteria evaluation with strict data type validation and instant decision badges.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="goTo('loans')">
+            Check Eligibility <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Customer Queries & Risk -->
+        <div class="home-card">
+          <div class="home-card-header">
+            <div class="home-card-icon"><i class="fas fa-users"></i></div>
+            <span class="badge badge-neutral">Query & Path</span>
+          </div>
+          <div>
+            <h3>Customer Analytics</h3>
+            <p>Filter customer records by city and risk tier via query params, and look up individual profiles by path ID.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="goTo('customers')">
+            Search Customers <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Model Architecture & Specs -->
+        <div class="home-card">
+          <div class="home-card-header">
+            <div class="home-card-icon"><i class="fas fa-chart-line"></i></div>
+            <span class="badge badge-amber">Model Specs</span>
+          </div>
+          <div>
+            <h3>Model Architecture & Metrics</h3>
+            <p>Examine the Random Forest regressor details, feature weights, accuracy metrics, and interactive Swagger docs.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="goTo('model-info')">
+            View Architecture <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick Server Banner -->
+      <div class="card server-banner" style="margin-top: 24px;">
+        <div class="server-banner-info">
+          <h4><i class="fas fa-server"></i> FastAPI Backend Connection</h4>
+          <p>The frontend communicates with your live FastAPI backend. You can customize the API endpoint in the Developer Console.</p>
+        </div>
+        <div class="server-banner-actions">
+          <a href="/docs" target="_blank" class="btn btn-secondary"><i class="fas fa-book-open"></i> Swagger UI</a>
+          <a href="/redoc" target="_blank" class="btn btn-secondary"><i class="fas fa-file-lines"></i> ReDoc</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- 2. MACHINE LEARNING HOUSE PRICE PREDICTOR                           -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <section class="page" id="page-ml-predict">
     <div class="container">
       <div class="page-head">
-        <h1 class="page-heading">FastAPI Studio</h1>
-        <p class="page-subtitle">A simple interface for exploring FastAPI APIs — students, loans, and customer data.</p>
+        <div class="page-badge"><i class="fas fa-brain"></i> Machine Learning Model</div>
+        <h1 class="page-heading">California House Price Predictor</h1>
+        <p class="page-subtitle">Input demographic and geographic features to compute machine learning price valuation.</p>
+      </div>
+
+      <div class="ml-layout">
+        
+        <!-- Left: Form Input Card -->
+        <div class="card stack">
+          <div class="card-header-bar">
+            <div>
+              <div class="card-title">Neighborhood & Property Features</div>
+              <div class="card-subtitle">Values are automatically validated against model schema</div>
+            </div>
+            <span class="badge badge-blue">8 Features</span>
+          </div>
+
+          <!-- Quick Preset Locations -->
+          <div class="preset-section">
+            <span class="preset-label"><i class="fas fa-wand-magic-sparkles"></i> California Presets:</span>
+            <div class="chips-row">
+              <button class="chip" onclick="applyHousingPreset('sf_bay')">🌉 SF Bay (Berkeley Hills)</button>
+              <button class="chip" onclick="applyHousingPreset('silicon_valley')">💻 Silicon Valley (Palo Alto)</button>
+              <button class="chip" onclick="applyHousingPreset('beverly_hills')">🌴 Beverly Hills / LA</button>
+              <button class="chip" onclick="applyHousingPreset('central_valley')">🌾 Central Valley (Fresno)</button>
+            </div>
+          </div>
+
+          <!-- 8 Inputs Grid -->
+          <form id="house-form" onsubmit="event.preventDefault(); doHousePredict();">
+            <div class="field-row">
+              <div class="field">
+                <label class="label" for="h-medinc">
+                  Median Income (MedInc)
+                  <span class="label-hint" id="medinc-usd-hint">≈ $83,250 / yr</span>
+                </label>
+                <input id="h-medinc" class="input" type="number" step="0.01" min="0.1" max="25" value="8.3252" oninput="updateMedIncHint()" required>
+                <span class="input-helper">Expressed in tens of thousands ($10,000s)</span>
+              </div>
+              <div class="field">
+                <label class="label" for="h-age">House Age (HouseAge)</label>
+                <input id="h-age" class="input" type="number" step="1" min="1" max="100" value="41.0" required>
+                <span class="input-helper">Median age of houses in block (years)</span>
+              </div>
+            </div>
+
+            <div class="field-row" style="margin-top: 14px;">
+              <div class="field">
+                <label class="label" for="h-rooms">Average Rooms (AveRooms)</label>
+                <input id="h-rooms" class="input" type="number" step="0.01" min="1" max="50" value="6.9841" required>
+                <span class="input-helper">Total rooms per household</span>
+              </div>
+              <div class="field">
+                <label class="label" for="h-bedrms">Average Bedrooms (AveBedrms)</label>
+                <input id="h-bedrms" class="input" type="number" step="0.01" min="0.2" max="20" value="1.0238" required>
+                <span class="input-helper">Total bedrooms per household</span>
+              </div>
+            </div>
+
+            <div class="field-row" style="margin-top: 14px;">
+              <div class="field">
+                <label class="label" for="h-pop">Population (Population)</label>
+                <input id="h-pop" class="input" type="number" step="1" min="1" max="40000" value="322.0" required>
+                <span class="input-helper">Total residents in the block group</span>
+              </div>
+              <div class="field">
+                <label class="label" for="h-occup">Average Occupancy (AveOccup)</label>
+                <input id="h-occup" class="input" type="number" step="0.01" min="0.5" max="50" value="2.5555" required>
+                <span class="input-helper">Average household member count</span>
+              </div>
+            </div>
+
+            <div class="field-row" style="margin-top: 14px;">
+              <div class="field">
+                <label class="label" for="h-lat">Latitude (Latitude)</label>
+                <input id="h-lat" class="input" type="number" step="0.0001" min="-90" max="90" value="37.88" required>
+                <span class="input-helper">North coordinate (California: ~32° - 42°)</span>
+              </div>
+              <div class="field">
+                <label class="label" for="h-long">Longitude (Longitude)</label>
+                <input id="h-long" class="input" type="number" step="0.0001" min="-180" max="180" value="-122.23" required>
+                <span class="input-helper">West coordinate (California: ~-124° - -114°)</span>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" id="btn-predict-house" style="margin-top: 20px;">
+              <i class="fas fa-calculator"></i> Compute House Price Prediction
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Prediction Result Display Card -->
+        <div class="stack">
+          
+          <div class="card result-card-main" id="ml-result-container">
+            <div class="empty-state">
+              <i class="fas fa-house-laptop"></i>
+              <h3>Ready for Inference</h3>
+              <p>Adjust the feature values on the left or select a preset, then click <strong>Compute House Price Prediction</strong>.</p>
+            </div>
+          </div>
+
+          <!-- Feature Description Accordion -->
+          <div class="card" style="padding: 16px 20px;">
+            <button class="collapsible-toggle" onclick="toggleCollapsible('features-guide', this)">
+              <span><i class="fas fa-list-check"></i> Feature Significance Guide</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="collapsible-body" id="features-guide">
+              <div class="feature-guide-list">
+                <div class="fg-item"><strong>MedInc:</strong> Highest feature importance (~52%). Drives baseline valuation.</div>
+                <div class="fg-item"><strong>Latitude & Longitude:</strong> Coastal coordinates command substantial location premiums.</div>
+                <div class="fg-item"><strong>AveOccup:</strong> Higher density negatively correlates with luxury valuations.</div>
+                <div class="fg-item"><strong>AveRooms:</strong> Proxy for physical home size and square footage.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- 3. BATCH CSV PREDICTOR                                              -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <section class="page" id="page-batch-upload">
+    <div class="container">
+      <div class="page-head">
+        <div class="page-badge"><i class="fas fa-file-csv"></i> Batch Processing</div>
+        <h1 class="page-heading">Batch CSV File Prediction</h1>
+        <p class="page-subtitle">Upload multi-row dataset files. The FastAPI server computes predictions for every row and streams back the enriched CSV.</p>
+      </div>
+
+      <div class="stack-lg">
+
+        <!-- Upload Drop Zone Card -->
+        <div class="card stack">
+          <div class="card-header-bar">
+            <div>
+              <div class="card-title">Upload Housing Dataset (.csv)</div>
+              <div class="card-subtitle">Must contain columns: MedInc, HouseAge, AveRooms, AveBedrms, Population, AveOccup, Latitude, Longitude</div>
+            </div>
+            <a href="/sample-housing-csv" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem;">
+              <i class="fas fa-download"></i> Download Sample CSV
+            </a>
+          </div>
+
+          <!-- Drag and Drop Box -->
+          <div class="drop-zone" id="csv-drop-zone" onclick="document.getElementById('csv-file-input').click()">
+            <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleFileSelected(this.files)">
+            <i class="fas fa-cloud-arrow-up drop-zone-icon"></i>
+            <div class="drop-zone-text" id="drop-zone-text">Click to choose a CSV file or drag & drop it here</div>
+            <div class="drop-zone-sub">Supported format: CSV (up to 50,000 rows)</div>
+          </div>
+
+          <!-- File Status Info -->
+          <div id="file-info-box" style="display: none;" class="file-info-card">
+            <div class="file-info-left">
+              <i class="fas fa-file-csv text-blue"></i>
+              <div>
+                <strong id="file-name-display">dataset.csv</strong>
+                <span id="file-size-display" style="color: var(--text-3); font-size: 0.8rem; margin-left: 8px;">0 KB</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-batch-process" onclick="doBatchPredict()">
+              <i class="fas fa-bolt"></i> Process Batch Predictions
+            </button>
+          </div>
+
+          <!-- Batch Result Area -->
+          <div id="result-batch"></div>
+        </div>
+
+        <!-- Sample CSV Schema Reference -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 8px;"><i class="fas fa-table"></i> Required CSV Column Schema</div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>MedInc</th>
+                  <th>HouseAge</th>
+                  <th>AveRooms</th>
+                  <th>AveBedrms</th>
+                  <th>Population</th>
+                  <th>AveOccup</th>
+                  <th>Latitude</th>
+                  <th>Longitude</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>8.3252</td>
+                  <td>41.0</td>
+                  <td>6.9841</td>
+                  <td>1.0238</td>
+                  <td>322.0</td>
+                  <td>2.5555</td>
+                  <td>37.88</td>
+                  <td>-122.23</td>
+                </tr>
+                <tr>
+                  <td>3.8700</td>
+                  <td>28.0</td>
+                  <td>5.4200</td>
+                  <td>1.0500</td>
+                  <td>1425.0</td>
+                  <td>3.0000</td>
+                  <td>37.85</td>
+                  <td>-122.25</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- 4. STUDENT MARKS MANAGEMENT                                         -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <section class="page" id="page-students">
+    <div class="container">
+      <div class="page-head">
+        <div class="page-badge"><i class="fas fa-graduation-cap"></i> Path & Body Validation</div>
+        <h1 class="page-heading">Student Marks Management</h1>
+        <p class="page-subtitle">Demonstrating path parameters (<code>GET /students/{id}</code>) and Pydantic validation (<code>POST /submit-marks</code>).</p>
       </div>
 
       <div class="grid-2">
-        <!-- Students -->
-        <div class="home-card">
-          <div class="home-card-icon"><i class="fas fa-graduation-cap"></i></div>
-          <div>
-            <h3>Students</h3>
-            <p>Fetch student records and submit academic marks.</p>
-          </div>
-          <button class="btn btn-primary" onclick="goTo('students')" style="align-self:flex-start;">Open Students <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
-        </div>
 
-        <!-- Loans -->
-        <div class="home-card">
-          <div class="home-card-icon"><i class="fas fa-hand-holding-dollar"></i></div>
-          <div>
-            <h3>Loan Eligibility</h3>
-            <p>Check whether an applicant qualifies for a loan.</p>
-          </div>
-          <button class="btn btn-primary" onclick="goTo('loans')" style="align-self:flex-start;">Check Eligibility <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
-        </div>
-
-        <!-- Customers -->
-        <div class="home-card">
-          <div class="home-card-icon"><i class="fas fa-users"></i></div>
-          <div>
-            <h3>Customers</h3>
-            <p>Search customers by city and risk level.</p>
-          </div>
-          <button class="btn btn-primary" onclick="goTo('customers')" style="align-self:flex-start;">Search Customers <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
-        </div>
-
-        <!-- Risk Profiles -->
-        <div class="home-card">
-          <div class="home-card-icon"><i class="fas fa-shield-halved"></i></div>
-          <div>
-            <h3>Risk Profiles</h3>
-            <p>View risk level and calculated risk score for any customer.</p>
-          </div>
-          <button class="btn btn-primary" onclick="goTo('risk')" style="align-self:flex-start;">View Risk Profiles <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
-        </div>
-      </div>
-
-      <!-- API Docs card -->
-      <div class="card" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-        <div>
-          <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">API Documentation</div>
-          <div style="font-size:.82rem;color:var(--text-2);margin-top:2px;">Explore all FastAPI endpoints in the auto-generated interactive docs.</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
-          <a href="/docs"  target="_blank" class="btn btn-secondary" style="font-size:.82rem;"><i class="fas fa-book-open" style="font-size:.75rem;"></i> Swagger UI</a>
-          <a href="/redoc" target="_blank" class="btn btn-secondary" style="font-size:.82rem;"><i class="fas fa-file-lines" style="font-size:.75rem;"></i> ReDoc</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─────────────────────────────────────────────────────────────────── -->
-  <!-- PAGE: STUDENTS                                                      -->
-  <!-- ─────────────────────────────────────────────────────────────────── -->
-  <div class="page" id="page-students">
-    <div class="container">
-      <div class="page-head">
-        <h1 class="page-heading">Students</h1>
-        <p class="page-subtitle">Search student records and update academic marks.</p>
-      </div>
-
-      <div class="students-grid">
-
-        <!-- Find Student card -->
+        <!-- Find Student Card -->
         <div class="card stack">
-          <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Find Student</div>
+          <div class="card-title">Find Student by ID</div>
+          <div class="card-subtitle">HTTP GET with Path Parameter</div>
 
           <div class="field">
             <label class="label" for="s-find-id">Student ID</label>
             <input id="s-find-id" class="input" type="text" value="S001" placeholder="e.g. S001" autocomplete="off">
           </div>
 
-          <div class="chips-row" style="margin-top:4px;">
-            <span class="chips-label">Try:</span>
-            <button class="chip" onclick="quickFind('S001')">S001</button>
-            <button class="chip" onclick="quickFind('S002')">S002</button>
-            <button class="chip" onclick="quickFind('S003')">S003</button>
-            <button class="chip" onclick="quickFind('S004')">S004</button>
+          <div class="chips-row">
+            <span class="chips-label">Quick IDs:</span>
+            <button class="chip" onclick="quickFind('S001')">S001 (Alice)</button>
+            <button class="chip" onclick="quickFind('S002')">S002 (Bob)</button>
+            <button class="chip" onclick="quickFind('S003')">S003 (Charlie)</button>
+            <button class="chip" onclick="quickFind('S004')">S004 (Diana)</button>
           </div>
 
           <button class="btn btn-primary btn-full" id="btn-find" onclick="doFindStudent()">
-            <i class="fas fa-search" style="font-size:.8rem;"></i> Find Student
+            <i class="fas fa-search"></i> Query Student Record
           </button>
 
           <!-- Result -->
           <div id="result-find"></div>
         </div>
 
-        <!-- Update Marks card -->
+        <!-- Update Marks Card -->
         <div class="card stack">
-          <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Update Marks</div>
+          <div class="card-title">Update Academic Marks</div>
+          <div class="card-subtitle">HTTP POST with JSON Body & Range Validation</div>
 
           <div class="field-row">
             <div class="field">
@@ -229,17 +503,23 @@
             </div>
             <div class="field">
               <label class="label" for="s-upd-subj">Subject</label>
-              <input id="s-upd-subj" class="input" type="text" value="Mathematics" placeholder="e.g. Mathematics">
+              <input id="s-upd-subj" class="input" type="text" value="Machine Learning" placeholder="Subject Name">
             </div>
           </div>
 
           <div class="field">
-            <label class="label" for="s-upd-marks">Marks <span style="color:var(--text-3);font-weight:400;">(0–100)</span></label>
-            <input id="s-upd-marks" class="input" type="number" value="90" min="0" max="200" placeholder="0–100">
+            <label class="label" for="s-upd-marks">Score <span style="color: var(--text-3);">(0–100)</span></label>
+            <input id="s-upd-marks" class="input" type="number" value="94" min="0" max="200" placeholder="0 - 100">
+          </div>
+
+          <div class="chips-row">
+            <span class="chips-label">Test validation:</span>
+            <button class="chip" onclick="setStudentMarksTest(95, 'Deep Learning')">Valid (95)</button>
+            <button class="chip" onclick="setStudentMarksTest(150, 'Math')">Invalid (150 &gt; 100)</button>
           </div>
 
           <button class="btn btn-primary btn-full" id="btn-update" onclick="doUpdateMarks()">
-            <i class="fas fa-check" style="font-size:.8rem;"></i> Submit Marks
+            <i class="fas fa-check"></i> Submit Marks Update
           </button>
 
           <!-- Result -->
@@ -248,20 +528,22 @@
 
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <!-- PAGE: LOANS                                                         -->
+  <!-- 5. LOAN ELIGIBILITY ENGINE                                          -->
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <div class="page" id="page-loans">
+  <section class="page" id="page-loans">
     <div class="container">
       <div class="page-head">
-        <h1 class="page-heading">Loan Eligibility</h1>
-        <p class="page-subtitle">Enter the applicant's information to check eligibility.</p>
+        <div class="page-badge"><i class="fas fa-hand-holding-dollar"></i> Rule-Based Predictor</div>
+        <h1 class="page-heading">Loan Eligibility Evaluation</h1>
+        <p class="page-subtitle">Demonstrates multi-field Pydantic schema validation and business logic rules (<code>POST /predict-loan</code>).</p>
       </div>
 
       <div class="loan-layout">
-        <!-- Form card -->
+
+        <!-- Form Card -->
         <div class="card stack">
           <div class="field">
             <label class="label" for="l-name">Applicant Name</label>
@@ -270,94 +552,92 @@
 
           <div class="field-row">
             <div class="field">
-              <label class="label" for="l-age">Age</label>
-              <input id="l-age" class="input" type="number" value="28" min="1" max="120" placeholder="Years">
+              <label class="label" for="l-age">Age (years)</label>
+              <input id="l-age" class="input" type="number" value="28" min="1" max="120">
             </div>
             <div class="field">
-              <label class="label" for="l-emp">Employment <span style="color:var(--text-3);font-weight:400;">(yrs)</span></label>
-              <input id="l-emp" class="input" type="number" value="4" min="0" max="60" placeholder="Years">
+              <label class="label" for="l-emp">Employment (years)</label>
+              <input id="l-emp" class="input" type="number" value="4" min="0" max="60">
             </div>
           </div>
 
           <div class="field-row">
             <div class="field">
               <label class="label" for="l-income">Annual Income ($)</label>
-              <input id="l-income" class="input" type="number" value="75000" min="0" step="1000" placeholder="e.g. 75000">
+              <input id="l-income" class="input" type="number" value="75000" min="0" step="1000">
             </div>
             <div class="field">
-              <label class="label" for="l-amount">Loan Amount ($)</label>
-              <input id="l-amount" class="input" type="number" value="25000" min="0" step="500" placeholder="e.g. 25000">
+              <label class="label" for="l-amount">Loan Amount Requested ($)</label>
+              <input id="l-amount" class="input" type="number" value="25000" min="0" step="500">
             </div>
           </div>
 
           <div class="chips-row">
-            <span class="chips-label">Quick test:</span>
-            <button class="chip" onclick="loanPreset(80000,3,26)">Eligible profile</button>
-            <button class="chip" onclick="loanPreset(35000,1,20)">Ineligible profile</button>
+            <span class="chips-label">Quick profiles:</span>
+            <button class="chip" onclick="loanPreset('Jane Doe', 80000, 4, 28, 25000)">✅ Eligible Applicant</button>
+            <button class="chip" onclick="loanPreset('John Smith', 32000, 1, 19, 10000)">❌ Ineligible Applicant</button>
           </div>
 
           <button class="btn btn-primary btn-full" id="btn-loan" onclick="doLoanCheck()">
-            <i class="fas fa-calculator" style="font-size:.8rem;"></i> Check Eligibility
+            <i class="fas fa-calculator"></i> Evaluate Loan Application
           </button>
         </div>
 
-        <!-- Right column: result + criteria -->
+        <!-- Right Side: Result Card & Rules Panel -->
         <div class="stack">
-          <!-- Result -->
           <div id="result-loan">
-            <div class="empty-state">
-              <i class="fas fa-calculator"></i>
-              Fill in the form and click<br><strong>Check Eligibility</strong>.
+            <div class="card" style="text-align: center; padding: 32px 20px;">
+              <i class="fas fa-hand-holding-dollar" style="font-size: 2rem; color: var(--text-3); margin-bottom: 10px;"></i>
+              <div style="font-weight: 700; color: var(--text-1);">Awaiting Evaluation</div>
+              <p style="font-size: 0.85rem; color: var(--text-2); margin-top: 4px;">Click <strong>Evaluate Loan Application</strong> to run rule inference.</p>
             </div>
           </div>
 
-          <!-- Eligibility criteria collapsible -->
-          <div class="card" style="padding:14px 16px;">
-            <button class="collapsible-toggle" onclick="toggleCollapsible('criteria-body', this)">
-              <span>Eligibility Criteria</span>
+          <div class="card" style="padding: 16px 20px;">
+            <button class="collapsible-toggle" onclick="toggleCollapsible('loan-rules', this)">
+              <span><i class="fas fa-gavel"></i> Loan Qualification Rules</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
             </button>
-            <div class="collapsible-body" id="criteria-body">
-              <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-                <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);">
-                  <span>Income</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text-1);">&gt; $50,000</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);">
-                  <span>Employment</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text-1);">&gt; 2 years</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);">
-                  <span>Age</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text-1);">&ge; 21 years</span>
-                </div>
+            <div class="collapsible-body" id="loan-rules">
+              <div class="rules-list">
+                <div class="rule-item"><span>Annual Income:</span> <strong>&gt; $50,000</strong></div>
+                <div class="rule-item"><span>Employment Duration:</span> <strong>&gt; 2 Years</strong></div>
+                <div class="rule-item"><span>Applicant Age:</span> <strong>&ge; 21 Years</strong></div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <!-- PAGE: CUSTOMERS                                                     -->
+  <!-- 6. CUSTOMER EXPLORER & RISK PROFILES                                -->
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <div class="page" id="page-customers">
+  <section class="page" id="page-customers">
     <div class="container">
       <div class="page-head">
-        <h1 class="page-heading">Customers</h1>
-        <p class="page-subtitle">Search and browse customer records by location and risk level.</p>
+        <div class="page-badge"><i class="fas fa-users"></i> Query & Path Parameter Architecture</div>
+        <h1 class="page-heading">Customer Analytics & Risk Profiles</h1>
+        <p class="page-subtitle">Demonstrates query parameters (<code>GET /customers?city=...&amp;risk_level=...</code>) and path variables (<code>GET /customer/{id}</code>).</p>
       </div>
 
       <div class="stack-lg">
 
-        <!-- ── Find Customers card ──────────────────────────────────────── -->
+        <!-- Query Parameters Card -->
         <div class="card stack">
-          <div>
-            <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Find Customers</div>
-            <div style="font-size:.82rem;color:var(--text-2);margin-top:3px;">Search by city and risk level.</div>
+          <div class="card-header-bar">
+            <div>
+              <div class="card-title">Customer Multi-Filter Search</div>
+              <div class="card-subtitle">HTTP GET with Query Parameters (<code>?city=...&amp;risk_level=...</code>)</div>
+            </div>
+            <span class="badge badge-blue">Query Filter</span>
           </div>
 
           <div class="field-row">
             <div class="field">
-              <label class="label" for="c-city">City</label>
+              <label class="label" for="c-city">City Location</label>
               <select id="c-city" class="input">
                 <option value="Chicago">Chicago</option>
                 <option value="New York">New York</option>
@@ -367,180 +647,246 @@
               </select>
             </div>
             <div class="field">
-              <label class="label" for="c-risk">Risk Level</label>
+              <label class="label" for="c-risk">Risk Classification</label>
               <select id="c-risk" class="input">
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="high">High Risk</option>
+                <option value="medium">Medium Risk</option>
+                <option value="low">Low Risk</option>
               </select>
             </div>
           </div>
 
           <div class="chips-row">
             <span class="chips-label">Quick filters:</span>
-            <button class="chip" onclick="customerPreset('Chicago','high')">Chicago · High Risk</button>
-            <button class="chip" onclick="customerPreset('New York','low')">New York · Low Risk</button>
-            <button class="chip" onclick="customerPreset('Los Angeles','medium')">Los Angeles · Medium Risk</button>
+            <button class="chip" onclick="customerPreset('Chicago', 'high')">Chicago · High</button>
+            <button class="chip" onclick="customerPreset('New York', 'low')">New York · Low</button>
+            <button class="chip" onclick="customerPreset('Los Angeles', 'medium')">Los Angeles · Medium</button>
           </div>
 
           <button class="btn btn-primary btn-full" id="btn-customers" onclick="doSearchCustomers()">
-            <i class="fas fa-search" style="font-size:.8rem;"></i> Search Customers
+            <i class="fas fa-search"></i> Search Customer Records
           </button>
 
-          <!-- Customer results -->
+          <!-- Customer Results -->
           <div id="result-customers"></div>
         </div>
 
-        <!-- ── Customer Risk Profile card ──────────────────────────────── -->
+        <!-- Path Parameter Risk Card -->
         <div class="card stack">
-          <div>
-            <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Customer Risk Profile</div>
-            <div style="font-size:.82rem;color:var(--text-2);margin-top:3px;">Enter a customer ID to view their risk information.</div>
+          <div class="card-header-bar">
+            <div>
+              <div class="card-title">Customer Risk Assessment Profile</div>
+              <div class="card-subtitle">HTTP GET with Integer Path Parameter (<code>/customer/{id}</code>)</div>
+            </div>
+            <span class="badge badge-amber">Path Profile</span>
           </div>
 
           <div class="field">
-            <label class="label" for="c-id">Customer ID</label>
-            <input id="c-id" class="input" type="number" value="101" min="1" placeholder="e.g. 101" style="max-width:180px;">
+            <label class="label" for="c-id">Customer Numeric ID</label>
+            <input id="c-id" class="input" type="number" value="101" min="1" placeholder="e.g. 101" style="max-width: 220px;">
           </div>
 
-          <div class="chips-row" style="margin-top:0;">
-            <span class="chips-label">Examples:</span>
-            <button class="chip" onclick="riskPreset(101)">101 · Alice</button>
-            <button class="chip" onclick="riskPreset(102)">102 · Bob</button>
-            <button class="chip" onclick="riskPreset(103)">103 · Charlie</button>
+          <div class="chips-row">
+            <span class="chips-label">Known Profiles:</span>
+            <button class="chip" onclick="riskPreset(101)">101 · Alice Smith (Low)</button>
+            <button class="chip" onclick="riskPreset(102)">102 · Bob Johnson (Med)</button>
+            <button class="chip" onclick="riskPreset(103)">103 · Charlie Brown (High)</button>
           </div>
 
-          <button class="btn btn-primary" id="btn-risk" onclick="doViewRisk()" style="align-self:flex-start;">
-            <i class="fas fa-id-card" style="font-size:.8rem;"></i> View Profile
+          <button class="btn btn-primary" id="btn-risk" onclick="doViewRisk()" style="align-self: flex-start;">
+            <i class="fas fa-shield-halved"></i> Fetch Risk Profile
           </button>
 
-          <!-- Risk result -->
+          <!-- Risk Result -->
           <div id="result-risk"></div>
         </div>
 
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <!-- PAGE: CONCEPTS                                                      -->
+  <!-- 7. MODEL ARCHITECTURE & CONCEPTS                                    -->
   <!-- ─────────────────────────────────────────────────────────────────── -->
-  <div class="page" id="page-concepts">
+  <section class="page" id="page-model-info">
     <div class="container">
       <div class="page-head">
-        <h1 class="page-heading">FastAPI Concepts</h1>
-        <p class="page-subtitle">Learn how FastAPI handles requests, validation, parameters, and responses.</p>
+        <div class="page-badge"><i class="fas fa-circle-info"></i> Technical Deep-Dive</div>
+        <h1 class="page-heading">Model Architecture & FastAPI Concepts</h1>
+        <p class="page-subtitle">Deep dive into the Machine Learning pipeline, model evaluation metrics, and FastAPI architecture.</p>
       </div>
 
-      <div class="stack">
-        <!-- Path parameters -->
-        <div class="card">
-          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Path Parameters</div>
-          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
-            Path parameters are values embedded directly in the URL and used to identify a specific resource.
-            For example, <code>/students/S001</code> uses <code>S001</code> as a path parameter.
-          </p>
-          <div style="margin-top:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#7dd3fc;">
-            @app.get("/students/{student_id}")<br>
-            def get_student(student_id: str): ...
+      <div class="stack-lg">
+
+        <!-- ML Model Card -->
+        <div class="card stack">
+          <div class="card-title"><i class="fas fa-microchip text-blue"></i> California Housing Model Card</div>
+          
+          <div class="grid-2">
+            <div class="spec-box">
+              <span class="spec-label">Algorithm</span>
+              <strong class="spec-value">Random Forest Regressor</strong>
+              <span class="spec-sub">100 decision trees (n_estimators=100)</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-label">Dataset</span>
+              <strong class="spec-value">California Housing Census</strong>
+              <span class="spec-sub">20,640 records across California block groups</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-label">Mean Absolute Error (MAE)</span>
+              <strong class="spec-value text-green">± $39,000 USD</strong>
+              <span class="spec-sub">Average valuation variance</span>
+            </div>
+            <div class="spec-box">
+              <span class="spec-label">Target Metric</span>
+              <strong class="spec-value text-blue">Median House Value</strong>
+              <span class="spec-sub">Expressed in $100,000s</span>
+            </div>
           </div>
         </div>
 
-        <!-- Query parameters -->
+        <!-- Features Importance Table -->
         <div class="card">
-          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Query Parameters</div>
-          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
-            Query parameters appear after <code>?</code> in the URL and are used for filtering or searching.
-            For example, <code>/customers?city=Chicago&amp;risk_level=high</code>.
-          </p>
-          <div style="margin-top:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#7dd3fc;">
-            @app.get("/customers")<br>
-            def get_customers(city: str, risk_level: str): ...
+          <div class="card-title" style="margin-bottom: 12px;"><i class="fas fa-chart-column text-blue"></i> Feature Descriptions & Weights</div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Feature Name</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Importance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>MedInc</code></td>
+                  <td>Float</td>
+                  <td>Median income in block group ($10k USD)</td>
+                  <td><span class="badge badge-green">52% (Dominant)</span></td>
+                </tr>
+                <tr>
+                  <td><code>AveOccup</code></td>
+                  <td>Float</td>
+                  <td>Average number of household members</td>
+                  <td><span class="badge badge-blue">14% (High)</span></td>
+                </tr>
+                <tr>
+                  <td><code>Latitude</code></td>
+                  <td>Float</td>
+                  <td>Block group latitude coordinate</td>
+                  <td><span class="badge badge-blue">10% (Location)</span></td>
+                </tr>
+                <tr>
+                  <td><code>Longitude</code></td>
+                  <td>Float</td>
+                  <td>Block group longitude coordinate</td>
+                  <td><span class="badge badge-blue">9% (Location)</span></td>
+                </tr>
+                <tr>
+                  <td><code>HouseAge</code></td>
+                  <td>Float</td>
+                  <td>Median age of a house within a block (years)</td>
+                  <td><span class="badge badge-neutral">5%</span></td>
+                </tr>
+                <tr>
+                  <td><code>AveRooms</code></td>
+                  <td>Float</td>
+                  <td>Average number of rooms per household</td>
+                  <td><span class="badge badge-neutral">4%</span></td>
+                </tr>
+                <tr>
+                  <td><code>Population</code></td>
+                  <td>Float</td>
+                  <td>Block group population count</td>
+                  <td><span class="badge badge-neutral">3%</span></td>
+                </tr>
+                <tr>
+                  <td><code>AveBedrms</code></td>
+                  <td>Float</td>
+                  <td>Average number of bedrooms per household</td>
+                  <td><span class="badge badge-neutral">3%</span></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Pydantic validation -->
-        <div class="card">
-          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Request Validation with Pydantic</div>
-          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
-            FastAPI uses Python type hints and Pydantic models to automatically validate incoming JSON bodies.
-            If a required field is missing or has the wrong type, FastAPI returns a clear error response.
-          </p>
-          <div style="margin-top:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#7dd3fc;">
-            class LoanApplication(BaseModel):<br>
-            &nbsp;&nbsp;name: str<br>
-            &nbsp;&nbsp;age: int<br>
-            &nbsp;&nbsp;income: float
+        <!-- FastAPI Architecture Highlights -->
+        <div class="grid-2">
+          
+          <div class="card">
+            <div class="card-title" style="margin-bottom: 6px;">Pydantic Type Validation</div>
+            <p style="font-size: 0.88rem; color: var(--text-2); line-height: 1.6;">
+              Incoming request payloads are strictly parsed and validated against typed Python models. Invalid fields return automatic HTTP 422 Unprocessable Entity responses with detailed location hints.
+            </p>
           </div>
+
+          <div class="card">
+            <div class="card-title" style="margin-bottom: 6px;">Fast Streaming Responses</div>
+            <p style="font-size: 0.88rem; color: var(--text-2); line-height: 1.6;">
+              The batch CSV processing endpoint utilizes FastAPI's <code>StreamingResponse</code> with in-memory <code>io.StringIO</code> buffers to stream annotated CSV files directly back to client browsers without saving temporary files to disk.
+            </p>
+          </div>
+
         </div>
 
-        <!-- HTTP Status Codes -->
-        <div class="card">
-          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">HTTP Status Codes</div>
-          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
-            FastAPI returns standard HTTP status codes to communicate the result of every request.
-          </p>
-          <div class="status-badges" style="margin-top:10px;">
-            <span class="badge badge-green"><i class="fas fa-check" style="font-size:.65rem;"></i> 200 OK</span>
-            <span class="badge badge-amber">400 Bad Request</span>
-            <span class="badge badge-red">404 Not Found</span>
-            <span class="badge badge-red">500 Server Error</span>
-          </div>
-          <p style="font-size:.82rem;color:var(--text-3);margin-top:8px;">
-            You can trigger these in the Students page — try submitting marks &gt; 100, or looking up a non-existent student ID.
-          </p>
-        </div>
-
-        <!-- Auto docs -->
-        <div class="card">
-          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Automatic API Documentation</div>
-          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
-            FastAPI automatically generates interactive Swagger UI documentation from your code — no extra configuration needed. 
-            Every endpoint, parameter, and response schema is visible and testable at <code>/docs</code>.
-          </p>
-          <div style="margin-top:12px;">
-            <a href="/docs" target="_blank" class="btn btn-primary" style="font-size:.85rem;">Open Swagger Docs <i class="fas fa-arrow-up-right-from-square" style="font-size:.7rem;"></i></a>
-          </div>
-        </div>
       </div>
     </div>
-  </div>
+  </section>
 
 </main>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- DEVELOPER CONSOLE (collapsed by default)                             -->
+<!-- DEVELOPER CONSOLE BAR (Collapsible)                                   -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <div class="dev-console">
-  <div class="dev-console-inner">
-    <button class="collapsible-toggle" id="dev-toggle-btn" onclick="toggleCollapsible('dev-body', this)">
-      <span style="display:flex;align-items:center;gap:7px;">
-        <i class="fas fa-terminal" style="font-size:.75rem;"></i>
-        Developer Console
-        <span id="dev-badge" style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-3);">No requests yet</span>
-      </span>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-    </button>
+  <div class="container dev-console-inner">
+    
+    <div class="dev-header">
+      <button class="collapsible-toggle dev-toggle" id="dev-toggle-btn" onclick="toggleCollapsible('dev-body', this)">
+        <span class="dev-toggle-left">
+          <i class="fas fa-terminal"></i>
+          <span>Developer Console</span>
+          <span id="dev-badge" class="badge badge-neutral">No API requests yet</span>
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
 
     <div class="collapsible-body" id="dev-body">
-      <div style="margin-top:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text-3);" id="dev-summary">–</div>
-        <button onclick="devCopyCurl()" style="font-size:.75rem;color:var(--text-3);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;" id="btn-copy-curl"
-          onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-3)'">
-          <i class="fas fa-copy" style="font-size:.7rem;"></i> Copy cURL
-        </button>
+      
+      <!-- Controls & Summary Row -->
+      <div class="dev-toolbar">
+        <div id="dev-summary" class="dev-summary-text">–</div>
+        <div class="dev-actions">
+          <span id="dev-latency" class="dev-latency-tag">0ms</span>
+          <button onclick="devCopyCurl()" class="dev-copy-btn" id="btn-copy-curl">
+            <i class="fas fa-copy"></i> Copy cURL
+          </button>
+        </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <!-- API URL Override Setting -->
+      <div class="dev-api-config">
+        <label for="dev-api-url" class="dev-config-label">API Base URL:</label>
+        <input type="text" id="dev-api-url" class="input dev-api-input" value="http://127.0.0.1:8000" onchange="updateCustomApiUrl(this.value)">
+        <button class="btn btn-secondary" onclick="testConnection()" style="padding: 6px 14px; font-size: 0.8rem;">Test Connection</button>
+      </div>
+
+      <!-- Split Code Previews -->
+      <div class="dev-previews">
         <div>
-          <div style="font-size:.7rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">cURL Command</div>
-          <pre id="dev-curl">–</pre>
+          <div class="dev-preview-label">cURL Command</div>
+          <pre id="dev-curl">curl -X GET "http://127.0.0.1:8000/health"</pre>
         </div>
         <div>
-          <div style="font-size:.7rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">JSON Response</div>
-          <pre id="dev-response" style="color:#86efac;">–</pre>
+          <div class="dev-preview-label">Server JSON Response</div>
+          <pre id="dev-response" style="color: #86efac;">{ "status": "running" }</pre>
         </div>
       </div>
+
     </div>
   </div>
 </div>

@@ -1,49 +1,57 @@
 /**
- * FastAPI Studio - Client Application Script
- * Clean, structured layout with clear state indicators and robust API handling
+ * FastAPI ML Studio - Client Application Script
+ * ---------------------------------------------
+ * Powers the California Housing Machine Learning valuation engine,
+ * Batch CSV processing, and FastAPI learning modules.
  */
 
+// API Base URL management (Supports localhost & GitHub Pages deployment)
 let apiBaseUrl = window.location.origin.includes('http') ? window.location.origin : 'http://127.0.0.1:8000';
 if (window.location.protocol === 'file:' || window.location.hostname.includes('github.io')) {
   apiBaseUrl = 'http://127.0.0.1:8000';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const urlInput = document.getElementById('dev-api-url');
+  if (urlInput) urlInput.value = apiBaseUrl;
+  
+  updateMedIncHint();
   checkBackendHealth();
+  setupDragAndDrop();
 });
 
+function updateCustomApiUrl(val) {
+  if (val && val.trim()) {
+    apiBaseUrl = val.trim().replace(/\/+$/, '');
+    testConnection();
+  }
+}
+
 // =========================================================================
-// Navigation & Collapsible Management
+// Navigation Management
 // =========================================================================
 function goTo(pageId) {
-  // Update desktop navigation links
-  const navIds = ['home', 'students', 'loans', 'customers', 'risk', 'concepts'];
-  navIds.forEach(id => {
-    const link = document.getElementById(`nl-${id}`);
-    if (link) {
-      if (id === pageId) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
+  const pages = ['home', 'ml-predict', 'batch-upload', 'students', 'loans', 'customers', 'model-info'];
+  
+  pages.forEach(id => {
+    const desktopLink = document.getElementById(`nl-${id}`);
+    if (desktopLink) {
+      if (id === pageId) desktopLink.classList.add('active');
+      else desktopLink.classList.remove('active');
     }
 
-    const mobLink = document.getElementById(`mnl-${id}`);
-    if (mobLink) {
-      if (id === pageId) {
-        mobLink.classList.add('active');
-      } else {
-        mobLink.classList.remove('active');
-      }
+    const mobileLink = document.getElementById(`mnl-${id}`);
+    if (mobileLink) {
+      if (id === pageId) mobileLink.classList.add('active');
+      else mobileLink.classList.remove('active');
     }
   });
 
-  // Switch visible page
-  document.querySelectorAll('.page').forEach(page => {
-    if (page.id === `page-${pageId}`) {
-      page.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => {
+    if (p.id === `page-${pageId}`) {
+      p.classList.add('active');
     } else {
-      page.classList.remove('active');
+      p.classList.remove('active');
     }
   });
 
@@ -52,54 +60,331 @@ function goTo(pageId) {
 
 function toggleCollapsible(elementId, button) {
   const body = document.getElementById(elementId);
-  if (body) {
-    body.classList.toggle('open');
-  }
-  if (button) {
-    button.classList.toggle('open');
-  }
+  if (body) body.classList.toggle('open');
+  if (button) button.classList.toggle('open');
 }
 
 // =========================================================================
-// Health Check
+// Health & Backend Connection Test
 // =========================================================================
 async function checkBackendHealth() {
   const dot = document.getElementById('status-dot');
   const label = document.getElementById('status-label');
 
   try {
-    const res = await fetch(`${apiBaseUrl}/students/S001`);
+    const res = await fetch(`${apiBaseUrl}/health`);
     if (res.ok) {
+      const data = await res.json();
       if (dot) {
         dot.style.backgroundColor = 'var(--green)';
-        dot.className = 'pulse-green';
+        dot.className = 'status-dot pulse-green';
       }
-      if (label) label.textContent = 'Online';
+      if (label) label.textContent = 'Model Online';
+      updateDevConsole('GET', '/health', null, res.status, data, 10);
     } else {
       if (dot) {
         dot.style.backgroundColor = 'var(--amber)';
-        dot.className = 'pulse-amber';
+        dot.className = 'status-dot pulse-amber';
       }
       if (label) label.textContent = 'Degraded';
     }
   } catch (err) {
     if (dot) {
       dot.style.backgroundColor = 'var(--red)';
-      dot.className = 'pulse-red';
+      dot.className = 'status-dot pulse-red';
     }
-    if (label) label.textContent = 'Offline';
+    if (label) label.textContent = 'Backend Offline';
+  }
+}
+
+function testConnection() {
+  checkBackendHealth();
+}
+
+// =========================================================================
+// 1. Machine Learning Housing Predictor
+// =========================================================================
+const housingPresets = {
+  sf_bay: {
+    MedInc: 8.3252,
+    HouseAge: 41.0,
+    AveRooms: 6.9841,
+    AveBedrms: 1.0238,
+    Population: 322.0,
+    AveOccup: 2.5555,
+    Latitude: 37.88,
+    Longitude: -122.23
+  },
+  silicon_valley: {
+    MedInc: 9.4215,
+    HouseAge: 26.0,
+    AveRooms: 7.2105,
+    AveBedrms: 1.0412,
+    Population: 1050.0,
+    AveOccup: 2.7200,
+    Latitude: 37.44,
+    Longitude: -122.16
+  },
+  beverly_hills: {
+    MedInc: 6.8520,
+    HouseAge: 35.0,
+    AveRooms: 6.5400,
+    AveBedrms: 1.0920,
+    Population: 780.0,
+    AveOccup: 2.8500,
+    Latitude: 34.07,
+    Longitude: -118.40
+  },
+  central_valley: {
+    MedInc: 2.4510,
+    HouseAge: 19.0,
+    AveRooms: 4.8500,
+    AveBedrms: 1.1200,
+    Population: 2450.0,
+    AveOccup: 3.6500,
+    Latitude: 36.74,
+    Longitude: -119.78
+  }
+};
+
+function applyHousingPreset(key) {
+  const p = housingPresets[key];
+  if (!p) return;
+
+  document.getElementById('h-medinc').value = p.MedInc;
+  document.getElementById('h-age').value = p.HouseAge;
+  document.getElementById('h-rooms').value = p.AveRooms;
+  document.getElementById('h-bedrms').value = p.AveBedrms;
+  document.getElementById('h-pop').value = p.Population;
+  document.getElementById('h-occup').value = p.AveOccup;
+  document.getElementById('h-lat').value = p.Latitude;
+  document.getElementById('h-long').value = p.Longitude;
+
+  updateMedIncHint();
+  doHousePredict();
+}
+
+function updateMedIncHint() {
+  const val = parseFloat(document.getElementById('h-medinc').value) || 0;
+  const approxUsd = Math.round(val * 10000);
+  const hint = document.getElementById('medinc-usd-hint');
+  if (hint) hint.textContent = `≈ $${approxUsd.toLocaleString()} / yr`;
+}
+
+async function doHousePredict() {
+  const btn = document.getElementById('btn-predict-house');
+  const resultDiv = document.getElementById('ml-result-container');
+
+  const payload = {
+    MedInc: parseFloat(document.getElementById('h-medinc').value) || 0,
+    HouseAge: parseFloat(document.getElementById('h-age').value) || 0,
+    AveRooms: parseFloat(document.getElementById('h-rooms').value) || 0,
+    AveBedrms: parseFloat(document.getElementById('h-bedrms').value) || 0,
+    Population: parseFloat(document.getElementById('h-pop').value) || 0,
+    AveOccup: parseFloat(document.getElementById('h-occup').value) || 0,
+    Latitude: parseFloat(document.getElementById('h-lat').value) || 0,
+    Longitude: parseFloat(document.getElementById('h-long').value) || 0
+  };
+
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Running Inference...');
+
+  const endpoint = '/predict';
+  const { status, data, time } = await performRequest('POST', endpoint, payload);
+
+  setLoadingState(btn, false, '<i class="fas fa-calculator"></i> Compute House Price Prediction');
+  updateDevConsole('POST', endpoint, payload, status, data, time);
+
+  if (status === 200 && data.predicted_price) {
+    const rawVal = data.raw_price_usd || 0;
+    const meterPercent = Math.min(100, Math.max(5, Math.round((rawVal / 600000) * 100)));
+
+    resultDiv.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="badge badge-green"><i class="fas fa-check-circle"></i> Random Forest Valuation</span>
+        <span style="font-size: 0.76rem; color: var(--text-3); font-family: 'JetBrains Mono';">${time}ms latency</span>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <div style="font-size: 0.8rem; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Predicted Property Value</div>
+        <div class="hero-prediction-price text-green">${data.predicted_price}</div>
+        <div class="price-range-badge">
+          <i class="fas fa-arrows-left-right"></i> Model Range: ${data.evidence_range}
+        </div>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-2); margin-bottom: 4px;">
+          <span>California Market Percentile</span>
+          <span style="font-family: 'JetBrains Mono'; font-weight: 700;">${meterPercent}% Index</span>
+        </div>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" style="width: ${meterPercent}%;"></div>
+        </div>
+      </div>
+
+      <div class="feature-summary-grid">
+        <div class="fs-item">
+          <div class="fs-label">Median Income</div>
+          <div class="fs-value">$${Math.round(payload.MedInc * 10000).toLocaleString()}</div>
+        </div>
+        <div class="fs-item">
+          <div class="fs-label">House Age</div>
+          <div class="fs-value">${payload.HouseAge} yrs</div>
+        </div>
+        <div class="fs-item">
+          <div class="fs-label">Avg Rooms</div>
+          <div class="fs-value">${payload.AveRooms.toFixed(2)}</div>
+        </div>
+        <div class="fs-item">
+          <div class="fs-label">Coordinates</div>
+          <div class="fs-value">${payload.Latitude.toFixed(2)}°, ${payload.Longitude.toFixed(2)}°</div>
+        </div>
+      </div>
+    `;
+  } else {
+    let errorMsg = 'Failed to obtain prediction from FastAPI server.';
+    if (data && data.detail) {
+      errorMsg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+    }
+    resultDiv.innerHTML = `
+      <div class="result-error">
+        <strong>Prediction Error (HTTP ${status})</strong>
+        <p style="margin-top: 4px;">${errorMsg}</p>
+        <p style="font-size: 0.78rem; color: var(--text-3); margin-top: 6px;">Ensure your FastAPI backend is running locally at ${apiBaseUrl}.</p>
+      </div>
+    `;
   }
 }
 
 // =========================================================================
-// Student Functions
+// 2. Batch CSV Processing & Upload
+// =========================================================================
+let selectedBatchFile = null;
+
+function setupDragAndDrop() {
+  const dropZone = document.getElementById('csv-drop-zone');
+  if (!dropZone) return;
+
+  ['dragenter', 'dragover'].forEach(name => {
+    dropZone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    dropZone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    });
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleFileSelected(files);
+  });
+}
+
+function handleFileSelected(files) {
+  if (!files || files.length === 0) return;
+  const file = files[0];
+
+  if (!file.name.endsWith('.csv')) {
+    alert('Please select a valid .csv file.');
+    return;
+  }
+
+  selectedBatchFile = file;
+  const infoBox = document.getElementById('file-info-box');
+  const nameEl = document.getElementById('file-name-display');
+  const sizeEl = document.getElementById('file-size-display');
+
+  if (nameEl) nameEl.textContent = file.name;
+  if (sizeEl) sizeEl.textContent = `${Math.round(file.size / 1024)} KB`;
+  if (infoBox) infoBox.style.display = 'flex';
+}
+
+async function doBatchPredict() {
+  if (!selectedBatchFile) return;
+
+  const btn = document.getElementById('btn-batch-process');
+  const resultDiv = document.getElementById('result-batch');
+
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Processing CSV...');
+
+  const formData = new FormData();
+  formData.append('file', selectedBatchFile);
+
+  const start = performance.now();
+  const url = `${apiBaseUrl}/predict-file`;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+
+    const elapsed = Math.round(performance.now() - start);
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const filename = `predicted_${selectedBatchFile.name}`;
+
+      setLoadingState(btn, false, '<i class="fas fa-bolt"></i> Process Batch Predictions');
+      updateDevConsole('POST', '/predict-file', `[FormData: ${selectedBatchFile.name}]`, res.status, { message: 'File streamed successfully', size_bytes: blob.size }, elapsed);
+
+      resultDiv.innerHTML = `
+        <div class="result-success" style="margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong>✓ Batch Processing Complete!</strong>
+              <p style="font-size: 0.84rem; color: var(--text-1); margin-top: 2px;">
+                Predictions computed and formatted for every row in <strong>${selectedBatchFile.name}</strong> (${elapsed}ms).
+              </p>
+            </div>
+            <a href="${downloadUrl}" download="${filename}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+              <i class="fas fa-download"></i> Download ${filename}
+            </a>
+          </div>
+        </div>
+      `;
+    } else {
+      let errData = await res.json().catch(() => ({ detail: 'Failed to process CSV file' }));
+      setLoadingState(btn, false, '<i class="fas fa-bolt"></i> Process Batch Predictions');
+      updateDevConsole('POST', '/predict-file', `[FormData: ${selectedBatchFile.name}]`, res.status, errData, elapsed);
+
+      resultDiv.innerHTML = `
+        <div class="result-error" style="margin-top: 16px;">
+          <strong>Batch Prediction Failed (HTTP ${res.status})</strong>
+          <p style="margin-top: 2px;">${errData.detail || 'Make sure required feature columns are present in your CSV.'}</p>
+        </div>
+      `;
+    }
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - start);
+    setLoadingState(btn, false, '<i class="fas fa-bolt"></i> Process Batch Predictions');
+    resultDiv.innerHTML = `
+      <div class="result-error" style="margin-top: 16px;">
+        <strong>Network Error</strong>
+        <p style="margin-top: 2px;">Could not connect to FastAPI server: ${err.message}</p>
+      </div>
+    `;
+  }
+}
+
+// =========================================================================
+// 3. Student Marks Management
 // =========================================================================
 function quickFind(id) {
-  const input = document.getElementById('s-find-id');
-  if (input) {
-    input.value = id;
-    doFindStudent();
-  }
+  document.getElementById('s-find-id').value = id;
+  doFindStudent();
+}
+
+function setStudentMarksTest(marks, subject) {
+  document.getElementById('s-upd-marks').value = marks;
+  document.getElementById('s-upd-subj').value = subject;
+  doUpdateMarks();
 }
 
 async function doFindStudent() {
@@ -111,193 +396,150 @@ async function doFindStudent() {
   const studentId = idInput.value.trim();
 
   if (!studentId) {
-    resultDiv.innerHTML = `
-      <div class="result-error" style="margin-top:12px;font-size:0.85rem;">
-        <strong>Validation Error</strong>
-        <p style="margin-top:2px;color:var(--text-1);">Please enter a student ID.</p>
-      </div>`;
+    resultDiv.innerHTML = `<div class="result-error" style="margin-top: 12px;">Please enter a Student ID.</div>`;
     return;
   }
 
-  setLoadingState(btn, true, 'Finding Student...');
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Searching...');
 
   const endpoint = `/students/${encodeURIComponent(studentId)}`;
   const { status, data, time } = await performRequest('GET', endpoint);
 
-  setLoadingState(btn, false, '<i class="fas fa-search" style="font-size:.8rem;"></i> Find Student');
+  setLoadingState(btn, false, '<i class="fas fa-search"></i> Query Student Record');
   updateDevConsole('GET', endpoint, null, status, data, time);
 
   if (status === 200) {
     resultDiv.innerHTML = `
-      <div class="result-success" style="margin-top:12px;font-size:0.85rem;display:flex;flex-direction:column;gap:6px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-weight:700;color:var(--text-1);">${data.name}</span>
+      <div class="result-success" style="margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <strong style="font-size: 1rem; color: #fff;">${data.name}</strong>
           <span class="badge badge-green">Grade ${data.grade}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;color:var(--text-2);font-size:0.82rem;margin-top:4px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-2); margin-top: 6px;">
           <span>Academic Marks:</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text-1);">${data.marks} / 100</span>
+          <span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #fff;">${data.marks} / 100</span>
         </div>
-        <div class="score-bar-track" style="margin-top:2px;">
-          <div class="score-bar-fill" style="width:${Math.min(100, Math.max(0, data.marks))}%; background-color:var(--green);"></div>
+        <div class="score-bar-track" style="margin-top: 6px;">
+          <div class="score-bar-fill" style="width: ${Math.min(100, Math.max(0, data.marks))}%;"></div>
         </div>
       </div>
     `;
   } else {
-    let errorText = `Could not find student "${studentId}". Please check the ID and try again.`;
-    if (data && data.detail) {
-      errorText = typeof data.detail === 'string' ? data.detail : (data.detail.error || JSON.stringify(data.detail));
-    }
+    let errorText = data && data.detail ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) : `Student "${studentId}" not found.`;
     resultDiv.innerHTML = `
-      <div class="result-error" style="margin-top:12px;font-size:0.85rem;">
-        <strong>Student Not Found</strong>
-        <p style="margin-top:2px;color:var(--text-1);">${errorText}</p>
-        <button onclick="toggleCollapsible('dev-body', document.getElementById('dev-toggle-btn'))" style="margin-top:6px;background:none;border:none;color:var(--text-2);text-decoration:underline;font-size:0.75rem;cursor:pointer;">View technical details</button>
+      <div class="result-error" style="margin-top: 12px;">
+        <strong>Student Not Found (HTTP ${status})</strong>
+        <p style="margin-top: 2px;">${errorText}</p>
       </div>
     `;
   }
 }
 
 async function doUpdateMarks() {
-  const idInput = document.getElementById('s-upd-id');
-  const subjectInput = document.getElementById('s-upd-subj');
-  const marksInput = document.getElementById('s-upd-marks');
+  const id = document.getElementById('s-upd-id').value.trim();
+  const subject = document.getElementById('s-upd-subj').value.trim();
+  const marks = parseInt(document.getElementById('s-upd-marks').value, 10);
   const resultDiv = document.getElementById('result-update');
   const btn = document.getElementById('btn-update');
 
-  if (!idInput || !subjectInput || !marksInput || !resultDiv || !btn) return;
+  const payload = { student_id: id, subject: subject, marks: isNaN(marks) ? 0 : marks };
 
-  const studentId = idInput.value.trim();
-  const subject = subjectInput.value.trim();
-  const marksVal = parseInt(marksInput.value, 10);
-
-  const payload = {
-    student_id: studentId,
-    subject: subject,
-    marks: isNaN(marksVal) ? 0 : marksVal
-  };
-
-  setLoadingState(btn, true, 'Submitting...');
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Submitting...');
 
   const endpoint = '/submit-marks';
   const { status, data, time } = await performRequest('POST', endpoint, payload);
 
-  setLoadingState(btn, false, '<i class="fas fa-check" style="font-size:.8rem;"></i> Submit Marks');
+  setLoadingState(btn, false, '<i class="fas fa-check"></i> Submit Marks Update');
   updateDevConsole('POST', endpoint, payload, status, data, time);
 
   if (status === 200) {
     resultDiv.innerHTML = `
-      <div class="result-success" style="margin-top:12px;font-size:0.85rem;">
+      <div class="result-success" style="margin-top: 12px;">
         <strong>✓ Marks Updated Successfully</strong>
-        <p style="margin-top:2px;color:var(--text-1);">${data.student} scored ${data.marks} in ${data.subject}.</p>
+        <p style="margin-top: 2px;">${data.student} scored ${data.marks} in ${data.subject}.</p>
       </div>
     `;
   } else {
-    let errorText = 'Unable to submit marks. Please make sure the student exists and score is between 0 and 100.';
+    let errText = 'Submission failed.';
     let fixText = '';
     if (data && data.detail) {
       if (typeof data.detail === 'object') {
-        errorText = data.detail.error || JSON.stringify(data.detail);
-        if (data.detail.fix) {
-          fixText = data.detail.fix;
-        }
+        errText = data.detail.error || JSON.stringify(data.detail);
+        if (data.detail.fix) fixText = data.detail.fix;
       } else {
-        errorText = data.detail;
+        errText = data.detail;
       }
     }
     resultDiv.innerHTML = `
-      <div class="result-error" style="margin-top:12px;font-size:0.85rem;">
-        <strong>Submission Failed (HTTP ${status})</strong>
-        <p style="margin-top:2px;color:var(--text-1);">${errorText}</p>
-        ${fixText ? `<p style="margin-top:4px;color:var(--amber);font-weight:600;"><i class="fas fa-lightbulb"></i> Fix: ${fixText}</p>` : ''}
-        <button onclick="toggleCollapsible('dev-body', document.getElementById('dev-toggle-btn'))" style="margin-top:6px;background:none;border:none;color:var(--text-2);text-decoration:underline;font-size:0.75rem;cursor:pointer;">View raw error</button>
+      <div class="result-error" style="margin-top: 12px;">
+        <strong>Validation Failed (HTTP ${status})</strong>
+        <p style="margin-top: 2px;">${errText}</p>
+        ${fixText ? `<p style="margin-top: 4px; color: var(--amber); font-weight: 600;">Fix: ${fixText}</p>` : ''}
       </div>
     `;
   }
 }
 
 // =========================================================================
-// Loan Functions
+// 4. Loan Eligibility Evaluation
 // =========================================================================
-function loanPreset(income, employment, age) {
+function loanPreset(name, income, emp, age, amount) {
+  document.getElementById('l-name').value = name;
   document.getElementById('l-income').value = income;
-  document.getElementById('l-emp').value = employment;
+  document.getElementById('l-emp').value = emp;
   document.getElementById('l-age').value = age;
+  document.getElementById('l-amount').value = amount;
   doLoanCheck();
 }
 
 async function doLoanCheck() {
-  const nameInput = document.getElementById('l-name');
-  const ageInput = document.getElementById('l-age');
-  const empInput = document.getElementById('l-emp');
-  const incomeInput = document.getElementById('l-income');
-  const amountInput = document.getElementById('l-amount');
-  const resultDiv = document.getElementById('result-loan');
   const btn = document.getElementById('btn-loan');
-
-  if (!nameInput || !ageInput || !empInput || !incomeInput || !amountInput || !resultDiv || !btn) return;
+  const resultDiv = document.getElementById('result-loan');
 
   const payload = {
-    name: nameInput.value.trim() || 'Applicant',
-    age: parseInt(ageInput.value, 10) || 0,
-    income: parseFloat(incomeInput.value) || 0,
-    loan_amount: parseFloat(amountInput.value) || 0,
-    employment_years: parseInt(empInput.value, 10) || 0
+    name: document.getElementById('l-name').value.trim() || 'Applicant',
+    age: parseInt(document.getElementById('l-age').value, 10) || 0,
+    income: parseFloat(document.getElementById('l-income').value) || 0,
+    loan_amount: parseFloat(document.getElementById('l-amount').value) || 0,
+    employment_years: parseInt(document.getElementById('l-emp').value, 10) || 0
   };
 
-  setLoadingState(btn, true, 'Checking...');
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Evaluating...');
 
-  const endpoint = '/predict';
+  const endpoint = '/predict-loan';
   const { status, data, time } = await performRequest('POST', endpoint, payload);
 
-  setLoadingState(btn, false, '<i class="fas fa-calculator" style="font-size:.8rem;"></i> Check Eligibility');
+  setLoadingState(btn, false, '<i class="fas fa-calculator"></i> Evaluate Loan Application');
   updateDevConsole('POST', endpoint, payload, status, data, time);
 
   if (status === 200) {
     const eligible = data.decision === 'approved';
     resultDiv.innerHTML = `
-      <div class="card" style="border-color:${eligible ? 'var(--green)' : 'var(--amber)'};">
-        <div style="display:flex;align-items:center;justify-content:between;gap:8px;">
-          <div style="font-size:0.95rem;font-weight:700;color:var(--text-1);flex:1;">Eligibility Result</div>
-          <span class="badge ${eligible ? 'badge-green' : 'badge-amber'}">${eligible ? 'Eligible' : 'Not Eligible'}</span>
+      <div class="card" style="border-color: ${eligible ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'};">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: #fff;">Application Decision</strong>
+          <span class="badge ${eligible ? 'badge-green' : 'badge-amber'}">${data.decision.toUpperCase()}</span>
         </div>
-        <div class="stat-row">
-          <div class="stat-item">
-            <div class="stat-label">Decision</div>
-            <div class="stat-value" style="color:${eligible ? 'var(--green)' : 'var(--amber)'};">${data.decision.toUpperCase()}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Applicant Age</div>
-            <div class="stat-value">${data.age} yrs</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Annual Income</div>
-            <div class="stat-value">$${data.income?.toLocaleString()}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Employment</div>
-            <div class="stat-value">${data.employment_years} yrs</div>
-          </div>
+
+        <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="fs-item"><div class="fs-label">Income</div><div class="fs-value">$${data.income.toLocaleString()}</div></div>
+          <div class="fs-item"><div class="fs-label">Employment</div><div class="fs-value">${data.employment_years} yrs</div></div>
+          <div class="fs-item"><div class="fs-label">Age</div><div class="fs-value">${data.age} yrs</div></div>
+          <div class="fs-item"><div class="fs-label">Requested</div><div class="fs-value">$${data.loan_amount.toLocaleString()}</div></div>
         </div>
-        <p style="font-size:0.8rem;color:var(--text-2);margin-top:12px;line-height:1.5;">
-          ${eligible 
-            ? '✓ The applicant meets all background verification and income criteria.' 
-            : '✗ The applicant does not satisfy the minimum criteria rules.'}
+
+        <p style="font-size: 0.82rem; color: var(--text-2); margin-top: 12px;">
+          ${eligible ? '✓ Meets income (&gt; $50k), age (&ge; 21), and employment (&gt; 2 yrs) requirements.' : '✗ Does not fulfill all minimum risk parameters.'}
         </p>
       </div>
     `;
   } else {
-    resultDiv.innerHTML = `
-      <div class="result-error">
-        <strong>Error checking eligibility</strong>
-        <p style="margin-top:2px;">FastAPI server returned HTTP ${status}.</p>
-      </div>
-    `;
+    resultDiv.innerHTML = `<div class="result-error">Evaluation failed with HTTP ${status}.</div>`;
   }
 }
 
 // =========================================================================
-// Customer Search & Risk Functions
+// 5. Customer Queries & Risk Profiles
 // =========================================================================
 function customerPreset(city, risk) {
   document.getElementById('c-city').value = city;
@@ -311,36 +553,28 @@ async function doSearchCustomers() {
   const resultDiv = document.getElementById('result-customers');
   const btn = document.getElementById('btn-customers');
 
-  if (!city || !risk || !resultDiv || !btn) return;
-
-  setLoadingState(btn, true, 'Searching...');
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Filtering...');
 
   const endpoint = `/customers?city=${encodeURIComponent(city)}&risk_level=${encodeURIComponent(risk)}`;
   const { status, data, time } = await performRequest('GET', endpoint);
 
-  setLoadingState(btn, false, '<i class="fas fa-search" style="font-size:.8rem;"></i> Search Customers');
+  setLoadingState(btn, false, '<i class="fas fa-search"></i> Search Customer Records');
   updateDevConsole('GET', endpoint, null, status, data, time);
 
   if (status === 200) {
     const list = data.results || [];
-    const count = data.count || list.length;
-
     if (list.length === 0) {
-      resultDiv.innerHTML = `
-        <div class="result-neutral" style="margin-top:14px;">
-          <p style="text-align:center;font-size:0.85rem;color:var(--text-2);">No customers match those criteria in ${city}.</p>
-        </div>
-      `;
+      resultDiv.innerHTML = `<div class="result-neutral" style="margin-top: 12px; text-align: center; color: var(--text-3);">No matching customer records in ${city}.</div>`;
     } else {
       resultDiv.innerHTML = `
-        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
-          <div style="font-size:0.8rem;color:var(--text-3);font-weight:600;">FOUND ${count} MATCHING CUSTOMERS</div>
+        <div style="margin-top: 14px;">
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-3); text-transform: uppercase;">Found ${data.count} Match(es)</div>
           <div class="customer-grid">
             ${list.map(c => `
-              <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;">
-                <div style="font-weight:700;font-size:0.88rem;color:var(--text-1);">${c.name}</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-                  <span style="font-size:0.75rem;color:var(--text-2);"><i class="fas fa-location-dot"></i> ${c.city}</span>
+              <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
+                <strong style="color: #fff; font-size: 0.92rem;">${c.name}</strong>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.78rem; color: var(--text-2);">
+                  <span><i class="fas fa-location-dot"></i> ${c.city}</span>
                   <span class="badge ${c.risk_level === 'low' ? 'badge-green' : c.risk_level === 'medium' ? 'badge-amber' : 'badge-red'}">${c.risk_level}</span>
                 </div>
               </div>
@@ -350,12 +584,7 @@ async function doSearchCustomers() {
       `;
     }
   } else {
-    resultDiv.innerHTML = `
-      <div class="result-error" style="margin-top:14px;">
-        <strong>Search Failed</strong>
-        <p style="margin-top:2px;">Query failed with status HTTP ${status}.</p>
-      </div>
-    `;
+    resultDiv.innerHTML = `<div class="result-error" style="margin-top: 12px;">Query failed with HTTP ${status}.</div>`;
   }
 }
 
@@ -369,59 +598,46 @@ async function doViewRisk() {
   const resultDiv = document.getElementById('result-risk');
   const btn = document.getElementById('btn-risk');
 
-  if (!idInput || !resultDiv || !btn) return;
   const customerId = parseInt(idInput.value, 10);
-
   if (isNaN(customerId)) {
-    resultDiv.innerHTML = `
-      <div class="result-error" style="margin-top:12px;">
-        <strong>Validation Error</strong>
-        <p style="margin-top:2px;">Please enter a valid numeric ID.</p>
-      </div>`;
+    resultDiv.innerHTML = `<div class="result-error" style="margin-top: 12px;">Enter a numeric ID.</div>`;
     return;
   }
 
-  setLoadingState(btn, true, 'Loading Profile...');
+  setLoadingState(btn, true, '<i class="fas fa-spinner fa-spin"></i> Fetching...');
 
   const endpoint = `/customer/${customerId}`;
   const { status, data, time } = await performRequest('GET', endpoint);
 
-  setLoadingState(btn, false, '<i class="fas fa-id-card" style="font-size:.8rem;"></i> View Profile');
+  setLoadingState(btn, false, '<i class="fas fa-shield-halved"></i> Fetch Risk Profile');
   updateDevConsole('GET', endpoint, null, status, data, time);
 
   if (status === 200 && !data.error) {
-    const percent = data.score !== undefined ? Math.round(data.score * 100) : null;
+    const percent = Math.round((data.score || 0) * 100);
     const badgeColor = data.risk_level === 'low' ? 'badge-green' : data.risk_level === 'medium' ? 'badge-amber' : 'badge-red';
 
     resultDiv.innerHTML = `
-      <div class="result-neutral" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="result-neutral" style="margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-            <span style="font-size:0.75rem;color:var(--text-3);font-family:'JetBrains Mono';">ID ${data.customer_id}</span>
-            <h4 style="font-size:0.95rem;font-weight:700;color:var(--text-1);margin-top:1px;">${data.name}</h4>
+            <span style="font-size: 0.74rem; color: var(--text-3); font-family: 'JetBrains Mono';">Customer ID #${data.customer_id}</span>
+            <h4 style="font-size: 1rem; color: #fff; margin-top: 2px;">${data.name}</h4>
           </div>
           <span class="badge ${badgeColor}">${data.risk_level.toUpperCase()} RISK</span>
         </div>
-        ${percent !== null ? `
-          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;display:flex;flex-direction:column;gap:4px;">
-            <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-2);">
-              <span>Risk Score Index</span>
-              <span style="font-weight:700;color:var(--text-1);font-family:'JetBrains Mono';">${data.score} (${percent}%)</span>
-            </div>
-            <div class="score-bar-track">
-              <div class="score-bar-fill" style="width:${percent}%; background-color:${data.risk_level === 'low' ? 'var(--green)' : data.risk_level === 'medium' ? 'var(--amber)' : 'var(--red)'};"></div>
-            </div>
+        <div style="margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-2); margin-bottom: 4px;">
+            <span>Risk Index Score: ${data.score}</span>
+            <span>${percent}%</span>
           </div>
-        ` : ''}
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width: ${percent}%;"></div>
+          </div>
+        </div>
       </div>
     `;
   } else {
-    resultDiv.innerHTML = `
-      <div class="result-error" style="margin-top:12px;">
-        <strong>Customer Profile Not Found</strong>
-        <p style="margin-top:2px;color:var(--text-1);">ID ${customerId} was not found in the risk profiles database.</p>
-      </div>
-    `;
+    resultDiv.innerHTML = `<div class="result-error" style="margin-top: 12px;">Customer #${customerId} profile not found.</div>`;
   }
 }
 
@@ -464,10 +680,10 @@ async function performRequest(method, endpoint, payload = null) {
   }
 }
 
-function setLoadingState(btn, isLoading, text) {
+function setLoadingState(btn, isLoading, htmlContent) {
   if (!btn) return;
   btn.disabled = isLoading;
-  btn.innerHTML = text;
+  btn.innerHTML = htmlContent;
 }
 
 let currentCurl = '';
@@ -475,7 +691,7 @@ let currentCurl = '';
 function updateDevConsole(method, endpoint, body, status, responseData, elapsed) {
   const badge = document.getElementById('dev-badge');
   const summary = document.getElementById('dev-summary');
-  const timeEl = document.getElementById('dev-console-time');
+  const latency = document.getElementById('dev-latency');
   const curlBox = document.getElementById('dev-curl');
   const resBox = document.getElementById('dev-response');
 
@@ -485,12 +701,10 @@ function updateDevConsole(method, endpoint, body, status, responseData, elapsed)
   }
 
   if (summary) {
-    summary.innerHTML = `<span class="method-${method.toLowerCase()}">${method}</span> <span style="font-family:'JetBrains Mono';">${endpoint}</span> &rarr; HTTP ${status}`;
+    summary.innerHTML = `<strong>${method}</strong> <code>${endpoint}</code> &rarr; Status <strong>${status}</strong>`;
   }
 
-  if (timeEl) {
-    timeEl.textContent = `${elapsed}ms`;
-  }
+  if (latency) latency.textContent = `${elapsed}ms`;
 
   let curl = `curl -X ${method} "${apiBaseUrl}${endpoint}"`;
   if (body) {
@@ -511,8 +725,8 @@ function devCopyCurl() {
     const btn = document.getElementById('btn-copy-curl');
     if (btn) {
       const orig = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-check text-emerald-400"></i> Copied';
-      setTimeout(() => { btn.innerHTML = orig; }, 1200);
+      btn.innerHTML = '<i class="fas fa-check text-green"></i> Copied';
+      setTimeout(() => { btn.innerHTML = orig; }, 1400);
     }
   }
 }

@@ -1,77 +1,92 @@
-# 🚀 FastAPI Learning & Interactive Showcase Dashboard
+# 🏡 California Housing ML & FastAPI Full-Stack Studio
 
-An interactive, modern web frontend showcasing all FastAPI features and learning modules built in this project — without changing any of the original backend logic.
-
----
-
-## 🌟 Features Showcased
-
-1. 🎓 **Student Marks Management (`main_s.py`)**
-   - **Path Parameters**: `GET /students/{student_id}`
-   - **Pydantic Validation**: `POST /submit-marks` with score range checks (0–100) and non-empty subject rules.
-   - **Custom HTTP Exceptions**: Demonstrates `400 Bad Request`, `404 Not Found`, and `500 Internal Server Error`.
-
-2. 🤖 **AI Loan Eligibility Predictor (`pyd.py` / `loan.py`)**
-   - **Pydantic Request Bodies**: `POST /predict`
-   - Real-time rule breakdown:
-     - Income > $50,000
-     - Employment Experience > 2 years
-     - Age >= 21 years
-   - Instant visual decision status badge (Approved vs Denied).
-
-3. 🔍 **Customer Query Filter Studio (`query_p.py`)**
-   - **Query Parameters**: `GET /customers?city=...&risk_level=...`
-   - Filter customer database by City and Risk Level with live result counter and customer cards.
-
-4. 🛡️ **Customer Risk Profile Explorer (`path_p.py`)**
-   - **Path Parameters**: `GET /customer/{customer_id}`
-   - Dynamic visual risk score gauge and risk classification level.
-
-5. ⚡ **FastAPI Under the Hood & Live Console**
-   - **Real-time API Inspector**: Inspects every HTTP method, status code, latency, headers, request payload, JSON response, and generates copyable `cURL` commands.
-   - **Direct Documentation Links**: Instant access to Swagger UI (`/docs`) and ReDoc (`/redoc`).
+A production-grade **FastAPI & Machine Learning** web platform that deploys a **Random Forest Regressor** trained on the California Housing dataset to provide real-time property valuations, batch CSV streaming predictions, and an interactive learning suite for REST API architectures.
 
 ---
 
-## 🚀 How to Run
+## 🌟 Key Features
 
-### Method 1: One-Click Launcher (Windows)
-Double-click `run_server.bat` in the project folder.
+### 1. 🤖 California Housing Price Predictor (ML Model)
+- **Model**: Scikit-Learn `RandomForestRegressor(n_estimators=100)`
+- **Dataset**: California Housing Census dataset (20,640 records)
+- **Features**: Median Income (`MedInc`), House Age (`HouseAge`), Average Rooms (`AveRooms`), Average Bedrooms (`AveBedrms`), Population (`Population`), Average Occupancy (`AveOccup`), Latitude (`Latitude`), Longitude (`Longitude`)
+- **Evaluation**: Mean Absolute Error (MAE) of **± $39,000 USD** with confidence interval estimation.
+- **Endpoints**: `POST /predict` and `POST /predict/house`
 
-### Method 2: Command Line
-```bash
-# Using the project's virtual environment:
-fastapi-project\venv\Scripts\python.exe app.py
+### 2. 📊 Batch CSV Prediction & Streaming
+- Accepts `.csv` datasets containing required demographic features.
+- Computes predictions across all rows without persisting files on disk using `StreamingResponse`.
+- Returns an annotated CSV with `predicted_price_formatted` ready for download.
+- **Endpoint**: `POST /predict-file` and `POST /predict/house-batch`
+
+### 3. 🎓 FastAPI REST Architecture Showcase
+- **Student Marks Management**: Demonstrates path parameters (`GET /students/{id}`) and Pydantic validation boundaries (`POST /submit-marks`).
+- **Loan Eligibility Engine**: Multi-variable financial evaluation with Pydantic schemas (`POST /predict-loan`).
+- **Customer Query & Path Explorer**: Multi-parameter search (`GET /customers?city=...&risk_level=...`) and risk profile analysis (`GET /customer/{id}`).
+
+### 4. 💻 Interactive Developer Console & UI
+- **Live cURL Generator**: Generates executable shell commands for every request.
+- **Latency Tracker & JSON Viewer**: Real-time response inspection with syntax highlighting.
+- **GitHub Pages Compatible**: Standalone frontend files (`index.html`, `style.css`, `app.js`) structured at repository root.
+
+---
+
+## 📁 Repository Structure
+
 ```
-Or with standard python:
+├── backend/
+│   ├── server.py              # Unified FastAPI server (ML + REST endpoints)
+│   └── ml_model/
+│       ├── house_model.joblib # Trained Random Forest model (100 estimators)
+│       └── house_model_columns.joblib # Model feature column schema
+├── index.html                 # Full-stack frontend dashboard (GitHub Pages root)
+├── style.css                  # Modern obsidian dark-theme stylesheet
+├── app.js                     # Interactive client application logic
+├── app.py                     # Root launcher entrypoint
+├── run_server.bat             # One-click Windows launch script
+├── test_endpoints.py          # Automated verification test suite
+├── train.py                   # Model training script
+├── explore.py                 # Exploratory data analysis (EDA)
+├── requirements.txt           # Python dependencies
+└── README.md                  # Project documentation
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Run the Server
+Double-click `run_server.bat` or run:
 ```bash
 python app.py
 ```
 
-Then open your browser and navigate to:
-👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+### 3. Open the Interactive Studio
+- **Web Dashboard**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- **Interactive Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc Documentation**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
 ---
 
-## 📁 Project Structure
+## 🧪 Running Automated Tests
+Run the comprehensive test suite verifying both ML inference and REST endpoints:
+```bash
+python test_endpoints.py
+```
 
-```
-FAST-API-learning/
-│
-├── app.py                     # Unified FastAPI server hosting backend & frontend
-├── run_server.bat             # One-click Windows startup script
-├── test_endpoints.py          # Automated verification tests for all endpoints
-│
-├── static/                    # Frontend files
-│   ├── index.html             # Responsive Dashboard UI (Tailwind + Icons)
-│   ├── app.js                 # Interactive client logic & live API inspector
-│   └── style.css              # Custom styling & glassmorphism theme
-│
-└── fastapi-project/           # Original backend learning modules
-    ├── main_s.py              # Student marks & HTTPException demo
-    ├── pyd.py                 # Loan application Pydantic demo
-    ├── path_p.py              # Path parameters demo
-    ├── query_p.py             # Query parameters demo
-    ├── loan.py                # Early loan model demo
-    └── main.py                # Basic FastAPI demo
-```
+---
+
+## 🌐 Deploying to GitHub Pages
+1. Push this repository to GitHub:
+   ```bash
+   git add .
+   git commit -m "Deploy California Housing ML & FastAPI Studio"
+   git push origin main
+   ```
+2. Navigate to **Repository Settings → Pages → Source: Deploy from branch `main` / root (`/`)**.
+3. The static UI is accessible globally and connects to your local or deployed FastAPI backend!
