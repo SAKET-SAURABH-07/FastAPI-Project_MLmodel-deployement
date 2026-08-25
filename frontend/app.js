@@ -10,7 +10,7 @@
 // =========================================================================
 // IMPORTANT: When deploying to GitHub Pages, replace this with your actual Render backend URL:
 // Example: const API_BASE_URL = "https://fastapi-ml-service.onrender.com";
-const API_BASE_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
+const API_BASE_URL = "https://fastapi-ml-model-1js4.onrender.com";
 
 // Active API Base URL:
 // Uses localhost if running locally on 127.0.0.1/localhost or file protocol,
