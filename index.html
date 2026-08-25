@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastAPI Studio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Layout helpers — scoped here to avoid CSS file bloat */
+    .container { max-width: 760px; margin: 0 auto; padding: 0 18px; }
+    .container-wide { max-width: 960px; margin: 0 auto; padding: 0 18px; }
+    .main { padding: 32px 0 56px; }
+    .page-head { margin-bottom: 22px; }
+
+    /* Two-column grid used on home & concepts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* Stacked sections with gap */
+    .stack > * + * { margin-top: 14px; }
+    .stack-lg > * + * { margin-top: 22px; }
+
+    /* Nav scrollable on mobile */
+    .nav-scroll { overflow-x: auto; display: flex; gap: 2px; padding-bottom: 1px; }
+    .nav-scroll::-webkit-scrollbar { display: none; }
+
+    /* Student dual-card layout */
+    .students-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    @media (max-width: 640px) { .students-grid { grid-template-columns: 1fr; } }
+
+    /* Loan layout — form left, result right on wide, stacked on small */
+    .loan-layout { display: grid; grid-template-columns: 1fr 300px; gap: 14px; align-items: start; }
+    @media (max-width: 680px) { .loan-layout { grid-template-columns: 1fr; } }
+
+    /* Inline chips row */
+    .chips-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+    .chips-label { font-size: 0.75rem; color: var(--text-3); }
+
+    /* Stat row inside result cards */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    @media (max-width: 400px) { .stat-row { grid-template-columns: 1fr; } }
+    .stat-item { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; }
+    .stat-item .stat-label { font-size: 0.72rem; color: var(--text-3); margin-bottom: 2px; }
+    .stat-item .stat-value { font-size: 0.92rem; font-weight: 700; color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
+
+    /* Concepts badges row */
+    .status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+    /* Dev console */
+    .dev-console { border-top: 1px solid var(--border); }
+    .dev-console-inner { max-width: 760px; margin: 0 auto; padding: 14px 18px 18px; }
+
+    /* Customer results grid */
+    .customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin-top: 12px; }
+
+    /* Empty placeholder */
+    .empty-state { text-align: center; padding: 28px 20px; color: var(--text-3); font-size: 0.85rem; }
+    .empty-state i { font-size: 1.6rem; display: block; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- NAVIGATION                                                            -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<header style="border-bottom:1px solid var(--border); background:rgba(9,16,31,.92); backdrop-filter:blur(14px); position:sticky; top:0; z-index:40;">
+  <div class="container-wide" style="display:flex; align-items:center; justify-content:space-between; height:56px; gap:12px;">
+
+    <!-- Brand -->
+    <button onclick="goTo('home')" style="display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;flex-shrink:0;">
+      <span style="width:28px;height:28px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-bolt" style="font-size:.8rem;color:#09101f;"></i>
+      </span>
+      <span style="font-weight:700;font-size:.95rem;color:var(--text-1);">FastAPI Studio</span>
+    </button>
+
+    <!-- Nav links (desktop) -->
+    <nav class="nav-scroll" style="flex:1; justify-content:center; display:flex;" id="main-nav">
+      <button class="nav-link active" onclick="goTo('home')"      id="nl-home">Home</button>
+      <button class="nav-link"        onclick="goTo('students')"  id="nl-students">Students</button>
+      <button class="nav-link"        onclick="goTo('loans')"     id="nl-loans">Loans</button>
+      <button class="nav-link"        onclick="goTo('customers')" id="nl-customers">Customers</button>
+      <button class="nav-link"        onclick="goTo('risk')"      id="nl-risk">Risk Profiles</button>
+      <button class="nav-link"        onclick="goTo('concepts')"  id="nl-concepts">Concepts</button>
+    </nav>
+
+    <!-- Right: status + doc links -->
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text-3);">
+        <span id="status-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text-3);flex-shrink:0;"></span>
+        <span id="status-label" class="hide-mobile">Checking…</span>
+      </div>
+      <div style="width:1px;height:16px;background:var(--border);"></div>
+      <a href="/docs"   target="_blank" style="font-size:.78rem;color:var(--text-3);white-space:nowrap;" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-3)'">Swagger <i class="fas fa-arrow-up-right-from-square" style="font-size:.6rem;"></i></a>
+      <a href="/redoc"  target="_blank" style="font-size:.78rem;color:var(--text-3);white-space:nowrap;display:none;" id="redoc-link" onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-3)'">ReDoc <i class="fas fa-arrow-up-right-from-square" style="font-size:.6rem;"></i></a>
+    </div>
+  </div>
+
+  <!-- Mobile nav scroll row -->
+  <div style="border-top:1px solid rgba(255,255,255,.04);">
+    <div style="overflow-x:auto;display:flex;gap:2px;padding:6px 18px;" id="mobile-nav">
+      <button class="nav-link active" onclick="goTo('home')"      id="mnl-home"      style="font-size:.8rem;">Home</button>
+      <button class="nav-link"        onclick="goTo('students')"  id="mnl-students"  style="font-size:.8rem;">Students</button>
+      <button class="nav-link"        onclick="goTo('loans')"     id="mnl-loans"     style="font-size:.8rem;">Loans</button>
+      <button class="nav-link"        onclick="goTo('customers')" id="mnl-customers" style="font-size:.8rem;">Customers</button>
+      <button class="nav-link"        onclick="goTo('risk')"      id="mnl-risk"      style="font-size:.8rem;">Risk Profiles</button>
+      <button class="nav-link"        onclick="goTo('concepts')"  id="mnl-concepts"  style="font-size:.8rem;">Concepts</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT                                                          -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- PAGE: HOME                                                          -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <div class="page active" id="page-home">
+    <div class="container">
+      <div class="page-head">
+        <h1 class="page-heading">FastAPI Studio</h1>
+        <p class="page-subtitle">A simple interface for exploring FastAPI APIs — students, loans, and customer data.</p>
+      </div>
+
+      <div class="grid-2">
+        <!-- Students -->
+        <div class="home-card">
+          <div class="home-card-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div>
+            <h3>Students</h3>
+            <p>Fetch student records and submit academic marks.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('students')" style="align-self:flex-start;">Open Students <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
+        </div>
+
+        <!-- Loans -->
+        <div class="home-card">
+          <div class="home-card-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+          <div>
+            <h3>Loan Eligibility</h3>
+            <p>Check whether an applicant qualifies for a loan.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('loans')" style="align-self:flex-start;">Check Eligibility <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
+        </div>
+
+        <!-- Customers -->
+        <div class="home-card">
+          <div class="home-card-icon"><i class="fas fa-users"></i></div>
+          <div>
+            <h3>Customers</h3>
+            <p>Search customers by city and risk level.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('customers')" style="align-self:flex-start;">Search Customers <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
+        </div>
+
+        <!-- Risk Profiles -->
+        <div class="home-card">
+          <div class="home-card-icon"><i class="fas fa-shield-halved"></i></div>
+          <div>
+            <h3>Risk Profiles</h3>
+            <p>View risk level and calculated risk score for any customer.</p>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('risk')" style="align-self:flex-start;">View Risk Profiles <i class="fas fa-arrow-right" style="font-size:.8rem;"></i></button>
+        </div>
+      </div>
+
+      <!-- API Docs card -->
+      <div class="card" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">API Documentation</div>
+          <div style="font-size:.82rem;color:var(--text-2);margin-top:2px;">Explore all FastAPI endpoints in the auto-generated interactive docs.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <a href="/docs"  target="_blank" class="btn btn-secondary" style="font-size:.82rem;"><i class="fas fa-book-open" style="font-size:.75rem;"></i> Swagger UI</a>
+          <a href="/redoc" target="_blank" class="btn btn-secondary" style="font-size:.82rem;"><i class="fas fa-file-lines" style="font-size:.75rem;"></i> ReDoc</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- PAGE: STUDENTS                                                      -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <div class="page" id="page-students">
+    <div class="container">
+      <div class="page-head">
+        <h1 class="page-heading">Students</h1>
+        <p class="page-subtitle">Search student records and update academic marks.</p>
+      </div>
+
+      <div class="students-grid">
+
+        <!-- Find Student card -->
+        <div class="card stack">
+          <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Find Student</div>
+
+          <div class="field">
+            <label class="label" for="s-find-id">Student ID</label>
+            <input id="s-find-id" class="input" type="text" value="S001" placeholder="e.g. S001" autocomplete="off">
+          </div>
+
+          <div class="chips-row" style="margin-top:4px;">
+            <span class="chips-label">Try:</span>
+            <button class="chip" onclick="quickFind('S001')">S001</button>
+            <button class="chip" onclick="quickFind('S002')">S002</button>
+            <button class="chip" onclick="quickFind('S003')">S003</button>
+            <button class="chip" onclick="quickFind('S004')">S004</button>
+          </div>
+
+          <button class="btn btn-primary btn-full" id="btn-find" onclick="doFindStudent()">
+            <i class="fas fa-search" style="font-size:.8rem;"></i> Find Student
+          </button>
+
+          <!-- Result -->
+          <div id="result-find"></div>
+        </div>
+
+        <!-- Update Marks card -->
+        <div class="card stack">
+          <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Update Marks</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="label" for="s-upd-id">Student ID</label>
+              <input id="s-upd-id" class="input" type="text" value="S001" placeholder="e.g. S001" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="label" for="s-upd-subj">Subject</label>
+              <input id="s-upd-subj" class="input" type="text" value="Mathematics" placeholder="e.g. Mathematics">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="s-upd-marks">Marks <span style="color:var(--text-3);font-weight:400;">(0–100)</span></label>
+            <input id="s-upd-marks" class="input" type="number" value="90" min="0" max="200" placeholder="0–100">
+          </div>
+
+          <button class="btn btn-primary btn-full" id="btn-update" onclick="doUpdateMarks()">
+            <i class="fas fa-check" style="font-size:.8rem;"></i> Submit Marks
+          </button>
+
+          <!-- Result -->
+          <div id="result-update"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- PAGE: LOANS                                                         -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <div class="page" id="page-loans">
+    <div class="container">
+      <div class="page-head">
+        <h1 class="page-heading">Loan Eligibility</h1>
+        <p class="page-subtitle">Enter the applicant's information to check eligibility.</p>
+      </div>
+
+      <div class="loan-layout">
+        <!-- Form card -->
+        <div class="card stack">
+          <div class="field">
+            <label class="label" for="l-name">Applicant Name</label>
+            <input id="l-name" class="input" type="text" value="Jane Doe" placeholder="Full name">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="label" for="l-age">Age</label>
+              <input id="l-age" class="input" type="number" value="28" min="1" max="120" placeholder="Years">
+            </div>
+            <div class="field">
+              <label class="label" for="l-emp">Employment <span style="color:var(--text-3);font-weight:400;">(yrs)</span></label>
+              <input id="l-emp" class="input" type="number" value="4" min="0" max="60" placeholder="Years">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="label" for="l-income">Annual Income ($)</label>
+              <input id="l-income" class="input" type="number" value="75000" min="0" step="1000" placeholder="e.g. 75000">
+            </div>
+            <div class="field">
+              <label class="label" for="l-amount">Loan Amount ($)</label>
+              <input id="l-amount" class="input" type="number" value="25000" min="0" step="500" placeholder="e.g. 25000">
+            </div>
+          </div>
+
+          <div class="chips-row">
+            <span class="chips-label">Quick test:</span>
+            <button class="chip" onclick="loanPreset(80000,3,26)">Eligible profile</button>
+            <button class="chip" onclick="loanPreset(35000,1,20)">Ineligible profile</button>
+          </div>
+
+          <button class="btn btn-primary btn-full" id="btn-loan" onclick="doLoanCheck()">
+            <i class="fas fa-calculator" style="font-size:.8rem;"></i> Check Eligibility
+          </button>
+        </div>
+
+        <!-- Right column: result + criteria -->
+        <div class="stack">
+          <!-- Result -->
+          <div id="result-loan">
+            <div class="empty-state">
+              <i class="fas fa-calculator"></i>
+              Fill in the form and click<br><strong>Check Eligibility</strong>.
+            </div>
+          </div>
+
+          <!-- Eligibility criteria collapsible -->
+          <div class="card" style="padding:14px 16px;">
+            <button class="collapsible-toggle" onclick="toggleCollapsible('criteria-body', this)">
+              <span>Eligibility Criteria</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="collapsible-body" id="criteria-body">
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+                <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);">
+                  <span>Income</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text-1);">&gt; $50,000</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);">
+                  <span>Employment</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text-1);">&gt; 2 years</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-2);">
+                  <span>Age</span><span style="font-family:'JetBrains Mono',monospace;color:var(--text-1);">&ge; 21 years</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- PAGE: CUSTOMERS                                                     -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <div class="page" id="page-customers">
+    <div class="container">
+      <div class="page-head">
+        <h1 class="page-heading">Customers</h1>
+        <p class="page-subtitle">Search and browse customer records by location and risk level.</p>
+      </div>
+
+      <div class="stack-lg">
+
+        <!-- ── Find Customers card ──────────────────────────────────────── -->
+        <div class="card stack">
+          <div>
+            <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Find Customers</div>
+            <div style="font-size:.82rem;color:var(--text-2);margin-top:3px;">Search by city and risk level.</div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="label" for="c-city">City</label>
+              <select id="c-city" class="input">
+                <option value="Chicago">Chicago</option>
+                <option value="New York">New York</option>
+                <option value="Los Angeles">Los Angeles</option>
+                <option value="Chicago1">Chicago1</option>
+                <option value="Chicago2">Chicago2</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label" for="c-risk">Risk Level</label>
+              <select id="c-risk" class="input">
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="chips-row">
+            <span class="chips-label">Quick filters:</span>
+            <button class="chip" onclick="customerPreset('Chicago','high')">Chicago · High Risk</button>
+            <button class="chip" onclick="customerPreset('New York','low')">New York · Low Risk</button>
+            <button class="chip" onclick="customerPreset('Los Angeles','medium')">Los Angeles · Medium Risk</button>
+          </div>
+
+          <button class="btn btn-primary btn-full" id="btn-customers" onclick="doSearchCustomers()">
+            <i class="fas fa-search" style="font-size:.8rem;"></i> Search Customers
+          </button>
+
+          <!-- Customer results -->
+          <div id="result-customers"></div>
+        </div>
+
+        <!-- ── Customer Risk Profile card ──────────────────────────────── -->
+        <div class="card stack">
+          <div>
+            <div style="font-size:.95rem;font-weight:700;color:var(--text-1);">Customer Risk Profile</div>
+            <div style="font-size:.82rem;color:var(--text-2);margin-top:3px;">Enter a customer ID to view their risk information.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="c-id">Customer ID</label>
+            <input id="c-id" class="input" type="number" value="101" min="1" placeholder="e.g. 101" style="max-width:180px;">
+          </div>
+
+          <div class="chips-row" style="margin-top:0;">
+            <span class="chips-label">Examples:</span>
+            <button class="chip" onclick="riskPreset(101)">101 · Alice</button>
+            <button class="chip" onclick="riskPreset(102)">102 · Bob</button>
+            <button class="chip" onclick="riskPreset(103)">103 · Charlie</button>
+          </div>
+
+          <button class="btn btn-primary" id="btn-risk" onclick="doViewRisk()" style="align-self:flex-start;">
+            <i class="fas fa-id-card" style="font-size:.8rem;"></i> View Profile
+          </button>
+
+          <!-- Risk result -->
+          <div id="result-risk"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <!-- PAGE: CONCEPTS                                                      -->
+  <!-- ─────────────────────────────────────────────────────────────────── -->
+  <div class="page" id="page-concepts">
+    <div class="container">
+      <div class="page-head">
+        <h1 class="page-heading">FastAPI Concepts</h1>
+        <p class="page-subtitle">Learn how FastAPI handles requests, validation, parameters, and responses.</p>
+      </div>
+
+      <div class="stack">
+        <!-- Path parameters -->
+        <div class="card">
+          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Path Parameters</div>
+          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
+            Path parameters are values embedded directly in the URL and used to identify a specific resource.
+            For example, <code>/students/S001</code> uses <code>S001</code> as a path parameter.
+          </p>
+          <div style="margin-top:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#7dd3fc;">
+            @app.get("/students/{student_id}")<br>
+            def get_student(student_id: str): ...
+          </div>
+        </div>
+
+        <!-- Query parameters -->
+        <div class="card">
+          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Query Parameters</div>
+          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
+            Query parameters appear after <code>?</code> in the URL and are used for filtering or searching.
+            For example, <code>/customers?city=Chicago&amp;risk_level=high</code>.
+          </p>
+          <div style="margin-top:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#7dd3fc;">
+            @app.get("/customers")<br>
+            def get_customers(city: str, risk_level: str): ...
+          </div>
+        </div>
+
+        <!-- Pydantic validation -->
+        <div class="card">
+          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Request Validation with Pydantic</div>
+          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
+            FastAPI uses Python type hints and Pydantic models to automatically validate incoming JSON bodies.
+            If a required field is missing or has the wrong type, FastAPI returns a clear error response.
+          </p>
+          <div style="margin-top:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#7dd3fc;">
+            class LoanApplication(BaseModel):<br>
+            &nbsp;&nbsp;name: str<br>
+            &nbsp;&nbsp;age: int<br>
+            &nbsp;&nbsp;income: float
+          </div>
+        </div>
+
+        <!-- HTTP Status Codes -->
+        <div class="card">
+          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">HTTP Status Codes</div>
+          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
+            FastAPI returns standard HTTP status codes to communicate the result of every request.
+          </p>
+          <div class="status-badges" style="margin-top:10px;">
+            <span class="badge badge-green"><i class="fas fa-check" style="font-size:.65rem;"></i> 200 OK</span>
+            <span class="badge badge-amber">400 Bad Request</span>
+            <span class="badge badge-red">404 Not Found</span>
+            <span class="badge badge-red">500 Server Error</span>
+          </div>
+          <p style="font-size:.82rem;color:var(--text-3);margin-top:8px;">
+            You can trigger these in the Students page — try submitting marks &gt; 100, or looking up a non-existent student ID.
+          </p>
+        </div>
+
+        <!-- Auto docs -->
+        <div class="card">
+          <div style="font-weight:700;color:var(--text-1);margin-bottom:6px;">Automatic API Documentation</div>
+          <p style="font-size:.87rem;color:var(--text-2);line-height:1.6;">
+            FastAPI automatically generates interactive Swagger UI documentation from your code — no extra configuration needed. 
+            Every endpoint, parameter, and response schema is visible and testable at <code>/docs</code>.
+          </p>
+          <div style="margin-top:12px;">
+            <a href="/docs" target="_blank" class="btn btn-primary" style="font-size:.85rem;">Open Swagger Docs <i class="fas fa-arrow-up-right-from-square" style="font-size:.7rem;"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- DEVELOPER CONSOLE (collapsed by default)                             -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="dev-console">
+  <div class="dev-console-inner">
+    <button class="collapsible-toggle" id="dev-toggle-btn" onclick="toggleCollapsible('dev-body', this)">
+      <span style="display:flex;align-items:center;gap:7px;">
+        <i class="fas fa-terminal" style="font-size:.75rem;"></i>
+        Developer Console
+        <span id="dev-badge" style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-3);">No requests yet</span>
+      </span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+
+    <div class="collapsible-body" id="dev-body">
+      <div style="margin-top:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text-3);" id="dev-summary">–</div>
+        <button onclick="devCopyCurl()" style="font-size:.75rem;color:var(--text-3);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;" id="btn-copy-curl"
+          onmouseover="this.style.color='var(--text-1)'" onmouseout="this.style.color='var(--text-3)'">
+          <i class="fas fa-copy" style="font-size:.7rem;"></i> Copy cURL
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+        <div>
+          <div style="font-size:.7rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">cURL Command</div>
+          <pre id="dev-curl">–</pre>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">JSON Response</div>
+          <pre id="dev-response" style="color:#86efac;">–</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

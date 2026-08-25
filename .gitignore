@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Virtual environment
+fastapi-project/venv/Lib/
+fastapi-project/venv/Scripts/
+fastapi-project/venv/Include/
+fastapi-project/venv/pyvenv.cfg
+fastapi-project/venv/share/
+venv/
+env/
+.env
+.venv
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Gemini / AI
+.gemini/
+
+# Logs
+*.log
