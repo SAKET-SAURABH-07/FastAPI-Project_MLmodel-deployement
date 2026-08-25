@@ -10,6 +10,7 @@ sys.path.insert(0, str(BASE_DIR))
 
 from backend.server import (
     app,
+    root,
     health,
     predict_house_price,
     HouseFeatures,
@@ -19,8 +20,7 @@ from backend.server import (
     predict_loan,
     LoanApplication,
     get_customers,
-    get_customer_risk,
-    serve_frontend
+    get_customer_risk
 )
 from fastapi import HTTPException
 
@@ -29,17 +29,17 @@ def run_tests():
     print("Running FastAPI & ML Model Integration Test Suite...")
     print("=" * 65)
 
-    # Test 1: Frontend file serving
-    resp = serve_frontend()
-    assert "index.html" in resp.path, "Frontend index.html path missing"
-    print("  [PASSED] Test 1: Frontend Dashboard index.html FileResponse")
+    # Test 1: Root Health Check Endpoint (GET /)
+    r = root()
+    assert r["status"] == "online" and "message" in r, f"Root health check failed: {r}"
+    print(f"  [PASSED] Test 1: GET / -> Status: {r['status']}, Message: {r['message']}")
 
-    # Test 2: ML Model Health Status
+    # Test 2: ML Model Health Status (GET /health)
     h = health()
     assert h["status"] == "running", f"ML Model health returned {h['status']}"
     print(f"  [PASSED] Test 2: GET /health -> Model: {h['model']}, Features: {len(h['features'])}")
 
-    # Test 3: ML House Price Prediction
+    # Test 3: ML House Price Prediction (POST /predict)
     sample_house = HouseFeatures(
         MedInc=8.3252,
         HouseAge=41.0,
@@ -54,7 +54,7 @@ def run_tests():
     assert "predicted_price" in pred and pred["raw_price_usd"] > 0
     print(f"  [PASSED] Test 3: POST /predict (House ML) -> {pred['predicted_price']} (Range: {pred['evidence_range']})")
 
-    # Test 4: Student Marks GET
+    # Test 4: Student Marks GET (GET /students/{id})
     s = get_student("S001")
     assert s["name"] == "Alice"
     print(f"  [PASSED] Test 4: GET /students/S001 -> {s}")
@@ -73,7 +73,7 @@ def run_tests():
     assert res["marks"] == 92
     print(f"  [PASSED] Test 6: POST /submit-marks (Valid) -> {res['message']}")
 
-    # Test 7: Submit Marks POST (Invalid)
+    # Test 7: Submit Marks POST (Invalid marks > 100)
     try:
         sub_err = MarksSubmission(student_id="S001", marks=150, subject="Math")
         submit_marks(sub_err)
@@ -82,7 +82,7 @@ def run_tests():
         assert e.status_code == 400
         print(f"  [PASSED] Test 7: POST /submit-marks (Invalid marks > 100) -> 400")
 
-    # Test 8: Loan Prediction
+    # Test 8: Loan Prediction (POST /predict-loan)
     loan_app = LoanApplication(name="Jane", age=25, income=65000, loan_amount=15000, employment_years=3)
     p_res = predict_loan(loan_app)
     assert p_res["decision"] == "approved"

@@ -1,9 +1,14 @@
 # California Housing ML & FastAPI Studio
 
+<<<<<<< HEAD
 A learning-focused full-stack application that exposes a trained machine-learning model through a FastAPI web service. The project uses a **Random Forest Regressor** trained on the California Housing dataset to estimate property values from demographic and geographic features. It also includes batch CSV prediction, automatic API documentation, automated tests, and interactive demonstrations of common REST API patterns.
+=======
+A production-ready **FastAPI & Machine Learning** web platform that deploys a **Random Forest Regressor** trained on the California Housing dataset to provide real-time property valuations, batch CSV streaming predictions, and an interactive learning suite for REST API architectures.
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)
 
 > **Project purpose:** This repository connects the complete machine-learning lifecycle—from data exploration and model training to API-based prediction—with practical FastAPI examples.
 
+<<<<<<< HEAD
 ## Contents
 
 - [What the project does](#what-the-project-does)
@@ -261,10 +266,36 @@ The frontend consists of ordinary static files and can be hosted separately from
 ├── explore.py                     # Exploratory data analysis
 ├── requirements.txt               # Python dependencies
 └── README.md                      # Project documentation
+=======
+## 🏗️ Architecture & Project Structure
+
+The project is cleanly separated into a static frontend (for GitHub Pages) and a FastAPI backend (for Render):
+
+```text
+├── frontend/
+│   ├── index.html                 # Main static web dashboard
+│   ├── style.css                  # Obsidian dark-theme stylesheet
+│   └── app.js                     # Interactive client application logic
+│
+├── backend/
+│   ├── server.py                  # Unified FastAPI server (ML + REST endpoints)
+│   ├── house_model.joblib         # Trained Random Forest model (100 estimators)
+│   ├── house_model_columns.joblib # Model feature column schema
+│   └── requirements.txt           # Python dependencies for deployment
+│
+├── train.py                       # Model training script
+├── test_endpoints.py              # Automated verification test suite
+├── explore.py                     # Exploratory data analysis (EDA)
+├── app.py                         # Local server launcher
+├── run_server.bat                 # One-click Windows launch script
+├── .gitignore                     # Git ignore rules
+└── README.md                      # Deployment & usage documentation
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)
 ```
 
 If your actual application file is named `main.py` rather than `backend/server.py`, update the structure above to match the real repository. The important distinction is that the FastAPI server must be able to locate both `.joblib` files when it starts.
 
+<<<<<<< HEAD
 ## API endpoints
 
 | Method | Endpoint | Purpose |
@@ -299,11 +330,98 @@ source venv/bin/activate
 ```
 
 ### 2. Install dependencies
+=======
+## 🚀 Deployment Guide
+
+```text
+Frontend:
+GitHub Pages
+
+Backend:
+Render
+
+Frontend communicates with:
+FastAPI REST API
+```
+
+---
+
+### Step 1: Deploy Backend to Render
+
+1. Create a new account / log in at **[render.com](https://render.com/)**.
+2. Click **New +** → **Web Service**.
+3. Connect your GitHub repository: `SAKET-SAURABH-07/FastAPI-Project_MLmodel-deployement`.
+4. Configure the service settings:
+   - **Name**: `fastapi-housing-ml` *(or your preferred name)*
+   - **Environment**: `Python 3`
+   - **Region**: Select closest to your users
+   - **Branch**: `main`
+   - **Root Directory**: `backend`
+   - **Build Command**:
+     ```bash
+     pip install -r requirements.txt
+     ```
+   - **Start Command**:
+     ```bash
+     uvicorn server:app --host 0.0.0.0 --port $PORT
+     ```
+5. Click **Create Web Service**.
+6. Once deployed, copy your live Render service URL (e.g., `https://fastapi-housing-ml.onrender.com`).
+7. Verify it works by opening `https://YOUR-SERVICE-NAME.onrender.com/` in your browser. You should see:
+   ```json
+   {
+     "message": "California Housing Price Prediction API is running",
+     "status": "online",
+     "version": "2.0.0",
+     "docs": "/docs",
+     "health": "/health"
+   }
+   ```
+
+---
+
+### Step 2: Connect Frontend to Render
+
+1. Open `frontend/app.js`.
+2. Locate the `API_BASE_URL` constant at the top of the file:
+   ```javascript
+   // IMPORTANT: When deploying to GitHub Pages, replace this with your actual Render backend URL:
+   // Example: const API_BASE_URL = "https://fastapi-housing-ml.onrender.com";
+   const API_BASE_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
+   ```
+3. Replace `"https://YOUR-RENDER-SERVICE.onrender.com"` with your actual live Render URL.
+4. Commit and push the change to GitHub:
+   ```bash
+   git add frontend/app.js
+   git commit -m "Configure production Render API URL"
+   git push origin main
+   ```
+
+---
+
+### Step 3: Deploy Frontend to GitHub Pages
+
+1. Go to your repository on **GitHub** → **Settings** → **Pages**.
+2. Under **Build and deployment** → **Source**, select **Deploy from a branch**.
+3. Under **Branch**:
+   - Select `main`
+   - Select folder: `/frontend` *(or `/ (root)` if you copy or symlink, GitHub Pages native `/frontend` or GitHub Actions)*
+   - Click **Save**.
+4. GitHub Pages will generate your live URL:
+   `https://SAKET-SAURABH-07.github.io/FastAPI-Project_MLmodel-deployement/`
+5. Visit the live URL — your frontend is now live and communicating with your Render backend!
+
+---
+
+## 💻 Local Development
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)
 
 ```bash
+cd backend
 pip install -r requirements.txt
 ```
 
+<<<<<<< HEAD
 The dependency file should include the packages required by the API and ML pipeline, such as FastAPI, Uvicorn, Pandas, Scikit-learn, Pydantic, Joblib, and the multipart upload support used by FastAPI file endpoints.
 
 ### 3. Confirm the model artifacts
@@ -327,11 +445,27 @@ run_server.bat
 
 Alternatively, run the Python entry point directly:
 
+=======
+### 2. Run the Local Server
+From the root directory:
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)
 ```bash
 python app.py
 ```
+Or start Uvicorn directly from `backend/`:
+```bash
+cd backend
+uvicorn server:app --reload --host 127.0.0.1 --port 8000
+```
 
+<<<<<<< HEAD
 If the FastAPI application is defined in another file, use Uvicorn with the appropriate module and application object. For example:
+=======
+### 3. Access Local Endpoints
+- **Interactive Web App**: Open `frontend/index.html` in your browser or visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- **Interactive Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc Documentation**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)
 
 ```bash
 uvicorn backend.server:app --reload
@@ -387,10 +521,17 @@ Retraining replaces the existing `.joblib` files. Keep the training and serving 
 
 Run the automated test suite with:
 
+<<<<<<< HEAD
+=======
+## 🧪 Automated Testing
+
+Run the test suite from the repository root:
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)
 ```bash
 python test_endpoints.py
 ```
 
+<<<<<<< HEAD
 The tests should verify both ordinary REST behavior and ML behavior, including successful health checks, valid single predictions, invalid input handling, missing CSV columns, empty files, and batch prediction responses.
 
 ## Deployment notes
@@ -476,3 +617,29 @@ The main learning objective is to show how a trained machine-learning model can 
 [4]: https://docs.pydantic.dev/ "Pydantic documentation"
 
 [5]: https://joblib.readthedocs.io/ "Joblib documentation"
+=======
+All 9 integration and ML tests verify:
+- Root API health check (`GET /`)
+- ML model status & feature schema (`GET /health`)
+- Live valuation inference (`POST /predict`)
+- Student records & boundary validation (`GET /students/{id}`, `POST /submit-marks`)
+- Loan application evaluation (`POST /predict-loan`)
+- Customer queries & risk profiles (`GET /customers`, `GET /customer/{id}`)
+
+---
+
+## 🌟 Features Overview
+
+| Module | Endpoint | Description |
+|---|---|---|
+| **Health Check** | `GET /` | Returns API status and links |
+| **Model Info** | `GET /health` | Model architecture, MAE ($39k), R² (0.805) |
+| **House Price ML** | `POST /predict` | Single California housing valuation |
+| **Batch CSV ML** | `POST /predict-file` | Multi-row CSV file streaming predictions |
+| **Sample CSV** | `GET /sample-housing-csv` | Generates sample CSV template |
+| **Student Marks** | `GET /students/{id}` | Path parameter student lookup |
+| **Submit Marks** | `POST /submit-marks` | Request body validation (0-100) |
+| **Loan Evaluation** | `POST /predict-loan` | Pydantic multi-field rule engine |
+| **Customer Queries** | `GET /customers` | Query parameter filtering (`?city=&risk_level=`) |
+| **Risk Profile** | `GET /customer/{id}` | Path parameter risk score |
+>>>>>>> c6d08f0 (Prepare project for GitHub Pages and Render)

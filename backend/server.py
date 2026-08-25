@@ -7,7 +7,6 @@ Unified server integrating:
 3. Student Marks Management (Path Params & Body Validation)
 4. Loan Eligibility Evaluation (Pydantic Schema Validation)
 5. Customer Query & Path Parameter Filtering
-6. Interactive Full-Stack Static Frontend Serving
 """
 
 import io
@@ -18,28 +17,22 @@ import pandas as pd
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-# Setup root directories
-ROOT_DIR = Path(__file__).resolve().parent.parent
-MODEL_DIR = Path(__file__).resolve().parent / "ml_model"
+# Setup base directory relative to this file for reliable deployment paths
+BASE_DIR = Path(__file__).resolve().parent
 
-# Load ML Model and feature column list (fallback to root if needed)
-model_path = MODEL_DIR / "house_model.joblib"
-if not model_path.exists():
-    model_path = ROOT_DIR / "house_model.joblib"
-
-columns_path = MODEL_DIR / "house_model_columns.joblib"
-if not columns_path.exists():
-    columns_path = ROOT_DIR / "house_model_columns.joblib"
+# Reliable model file paths
+MODEL_PATH = BASE_DIR / "house_model.joblib"
+COLUMNS_PATH = BASE_DIR / "house_model_columns.joblib"
 
 try:
-    ml_model = joblib.load(str(model_path))
-    feature_columns = joblib.load(str(columns_path))
+    ml_model = joblib.load(str(MODEL_PATH))
+    feature_columns = joblib.load(str(COLUMNS_PATH))
     model_loaded = True
 except Exception as e:
-    print(f"Warning: Could not load ML model: {e}")
+    print(f"Warning: Could not load ML model from {MODEL_PATH}: {e}")
     ml_model = None
     feature_columns = [
         "MedInc", "HouseAge", "AveRooms", "AveBedrms", 
@@ -49,14 +42,16 @@ except Exception as e:
 
 # Initialize FastAPI App
 app = FastAPI(
-    title="California Housing ML & FastAPI Full-Stack Studio",
-    description="Production-grade FastAPI platform showcasing Machine Learning model deployment (Random Forest Regressor), batch CSV inference, and core REST API architecture patterns.",
+    title="California Housing ML & FastAPI Backend",
+    description="Production-ready FastAPI backend serving Machine Learning predictions (Random Forest Regressor), batch CSV streaming inference, and core REST API architecture patterns.",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# Enable CORS for local testing, frontend SPA, and GitHub Pages
+# Enable CORS for GitHub Pages frontend and local development
+# Note: allow_origins=["*"] can be restricted to your GitHub Pages URL in production,
+# e.g., allow_origins=["https://YOUR_GITHUB_USERNAME.github.io"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,6 +59,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# --------------------------------------------------------------------------
+# 0. Root Health Endpoint
+# --------------------------------------------------------------------------
+@app.get("/", tags=["Health"])
+def root():
+    """Returns a health status confirmation indicating that the FastAPI backend is running."""
+    return {
+        "message": "California Housing Price Prediction API is running",
+        "status": "online",
+        "version": "2.0.0",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 
 # --------------------------------------------------------------------------
 # 1. Machine Learning: California Housing Price Prediction
@@ -351,23 +362,7 @@ def get_customer_risk(customer_id: int):
 
 
 # --------------------------------------------------------------------------
-# 5. Frontend UI Delivery (GitHub Pages & Local Server Compatibility)
-# --------------------------------------------------------------------------
-@app.get("/", include_in_schema=False)
-def serve_frontend():
-    return FileResponse(str(ROOT_DIR / "index.html"))
-
-@app.get("/style.css", include_in_schema=False)
-def serve_style():
-    return FileResponse(str(ROOT_DIR / "style.css"))
-
-@app.get("/app.js", include_in_schema=False)
-def serve_js():
-    return FileResponse(str(ROOT_DIR / "app.js"))
-
-
-# --------------------------------------------------------------------------
-# 6. Sample CSV Generation for testing Batch Predict
+# 5. Sample CSV Generation for testing Batch Predict
 # --------------------------------------------------------------------------
 @app.get("/sample-housing-csv", tags=["Machine Learning"])
 def get_sample_csv():
@@ -387,14 +382,13 @@ def get_sample_csv():
 
 
 # --------------------------------------------------------------------------
-# Entry Point
+# Local Entry Point
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
     print("=" * 65)
     print(" 🚀 California Housing ML & FastAPI Server Starting...")
-    print(" 🌐 Web Dashboard:   http://127.0.0.1:8000")
     print(" 📖 Swagger UI Docs: http://127.0.0.1:8000/docs")
     print(" 📑 ReDoc Docs:      http://127.0.0.1:8000/redoc")
     print("=" * 65)
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

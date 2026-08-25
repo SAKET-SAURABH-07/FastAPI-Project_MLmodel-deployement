@@ -44,10 +44,10 @@
         <span id="status-label">Checking...</span>
       </div>
       <div class="nav-divider"></div>
-      <a href="/docs" target="_blank" class="doc-link" title="Open Swagger UI API Documentation">
+      <a href="javascript:void(0)" onclick="openApiDoc('/docs')" class="doc-link" title="Open Swagger UI API Documentation">
         <i class="fas fa-book-open"></i> <span class="hide-mobile">Swagger</span>
       </a>
-      <a href="/redoc" target="_blank" class="doc-link" title="Open ReDoc API Documentation">
+      <a href="javascript:void(0)" onclick="openApiDoc('/redoc')" class="doc-link" title="Open ReDoc API Documentation">
         <i class="fas fa-file-lines"></i> <span class="hide-mobile">ReDoc</span>
       </a>
     </div>
@@ -216,8 +216,8 @@
           <p>The frontend communicates with your live FastAPI backend. You can customize the API endpoint in the Developer Console.</p>
         </div>
         <div class="server-banner-actions">
-          <a href="/docs" target="_blank" class="btn btn-secondary"><i class="fas fa-book-open"></i> Swagger UI</a>
-          <a href="/redoc" target="_blank" class="btn btn-secondary"><i class="fas fa-file-lines"></i> ReDoc</a>
+          <button onclick="openApiDoc('/docs')" class="btn btn-secondary"><i class="fas fa-book-open"></i> Swagger UI</button>
+          <button onclick="openApiDoc('/redoc')" class="btn btn-secondary"><i class="fas fa-file-lines"></i> ReDoc</button>
         </div>
       </div>
 
@@ -374,9 +374,9 @@
               <div class="card-title">Upload Housing Dataset (.csv)</div>
               <div class="card-subtitle">Must contain columns: MedInc, HouseAge, AveRooms, AveBedrms, Population, AveOccup, Latitude, Longitude</div>
             </div>
-            <a href="/sample-housing-csv" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem;">
+            <button onclick="downloadSampleCsv()" class="btn btn-secondary" style="font-size: 0.8rem;">
               <i class="fas fa-download"></i> Download Sample CSV
-            </a>
+            </button>
           </div>
 
           <!-- Drag and Drop Box -->

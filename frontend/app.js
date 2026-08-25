@@ -5,11 +5,19 @@
  * Batch CSV processing, and FastAPI learning modules.
  */
 
-// API Base URL management (Supports localhost & GitHub Pages deployment)
-let apiBaseUrl = window.location.origin.includes('http') ? window.location.origin : 'http://127.0.0.1:8000';
-if (window.location.protocol === 'file:' || window.location.hostname.includes('github.io')) {
-  apiBaseUrl = 'http://127.0.0.1:8000';
-}
+// =========================================================================
+// API Base URL Configuration for Render & Local Development
+// =========================================================================
+// IMPORTANT: When deploying to GitHub Pages, replace this with your actual Render backend URL:
+// Example: const API_BASE_URL = "https://fastapi-ml-service.onrender.com";
+const API_BASE_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
+
+// Active API Base URL:
+// Uses localhost if running locally on 127.0.0.1/localhost or file protocol,
+// otherwise uses the configured API_BASE_URL (for GitHub Pages / production).
+let apiBaseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+  ? 'http://127.0.0.1:8000'
+  : API_BASE_URL;
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlInput = document.getElementById('dev-api-url');
@@ -25,6 +33,14 @@ function updateCustomApiUrl(val) {
     apiBaseUrl = val.trim().replace(/\/+$/, '');
     testConnection();
   }
+}
+
+function openApiDoc(path) {
+  window.open(`${apiBaseUrl}${path}`, '_blank');
+}
+
+function downloadSampleCsv() {
+  window.open(`${apiBaseUrl}/sample-housing-csv`, '_blank');
 }
 
 // =========================================================================
@@ -250,7 +266,7 @@ async function doHousePredict() {
       <div class="result-error">
         <strong>Prediction Error (HTTP ${status})</strong>
         <p style="margin-top: 4px;">${errorMsg}</p>
-        <p style="font-size: 0.78rem; color: var(--text-3); margin-top: 6px;">Ensure your FastAPI backend is running locally at ${apiBaseUrl}.</p>
+        <p style="font-size: 0.78rem; color: var(--text-3); margin-top: 6px;">Ensure your FastAPI backend is running at ${apiBaseUrl}.</p>
       </div>
     `;
   }
